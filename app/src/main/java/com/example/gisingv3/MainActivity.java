@@ -9,8 +9,9 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.Button;
 import android.widget.TextView;
+
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -45,7 +46,7 @@ public class MainActivity extends AppCompatActivity {
 
         rvAlarms = findViewById(R.id.rvAlarms);
         tvNoAlarms = findViewById(R.id.tvNoAlarms);
-        Button btnAddAlarm = findViewById(R.id.btnAddAlarm);
+        FloatingActionButton btnAddAlarm = findViewById(R.id.btnAddAlarm);
 
         alarmList = new ArrayList<>();
         adapter = new AlarmAdapter(alarmList);
