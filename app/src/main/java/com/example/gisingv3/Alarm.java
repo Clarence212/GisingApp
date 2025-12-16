@@ -2,6 +2,7 @@ package com.example.gisingv3;
 
 import java.io.Serializable;
 import java.util.Calendar;
+import java.util.Locale;
 
 public class Alarm implements Serializable {
     private int id;
@@ -49,6 +50,9 @@ public class Alarm implements Serializable {
     }
     
     public String getTimeString() {
-        return String.format("%02d:%02d", hour, minute);
+        String amPm = hour >= 12 ? "PM" : "AM";
+        int hour12 = hour % 12;
+        if (hour12 == 0) hour12 = 12;
+        return String.format(Locale.getDefault(), "%02d:%02d %s", hour12, minute, amPm);
     }
 }

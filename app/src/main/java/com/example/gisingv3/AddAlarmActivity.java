@@ -12,7 +12,6 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.util.Calendar;
 import java.util.Locale;
 
 public class AddAlarmActivity extends AppCompatActivity {
@@ -20,12 +19,10 @@ public class AddAlarmActivity extends AppCompatActivity {
     private TextView tvTimeInput;
     private LinearLayout cardMath, cardShake;
     private LinearLayout cardEasy, cardMedium, cardHard;
-    private Button saveButton;
-    private ImageButton btnBack;
 
     // Day TextViews
     private TextView[] dayViews;
-    private boolean[] daysSelected = {false, false, false, false, false, false, false}; // S, M, T, W, T, F, S
+    private final boolean[] daysSelected = {false, false, false, false, false, false, false}; // S, M, T, W, T, F, S
 
     private int selectedHour = 7;
     private int selectedMinute = 0;
@@ -44,8 +41,8 @@ public class AddAlarmActivity extends AppCompatActivity {
         cardEasy = findViewById(R.id.cardEasy);
         cardMedium = findViewById(R.id.cardMedium);
         cardHard = findViewById(R.id.cardHard);
-        saveButton = findViewById(R.id.saveAlarmButton);
-        btnBack = findViewById(R.id.btnBack);
+        Button saveButton = findViewById(R.id.saveAlarmButton);
+        ImageButton btnBack = findViewById(R.id.btnBack);
 
         // Initialize Day Views
         dayViews = new TextView[7];
@@ -125,7 +122,7 @@ public class AddAlarmActivity extends AppCompatActivity {
                     selectedHour = hourOfDay;
                     selectedMinute = minute;
                     updateTimeDisplay();
-                }, selectedHour, selectedMinute, false);
+                }, selectedHour, selectedMinute, false); // Set is24HourView to false
         timePickerDialog.show();
     }
 

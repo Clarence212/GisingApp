@@ -54,6 +54,13 @@ public class MainActivity extends AppCompatActivity {
 
         alarmList = new ArrayList<>();
         adapter = new AlarmAdapter(alarmList);
+        adapter.setOnAlarmToggleListener((alarm, isEnabled) -> {
+            if (isEnabled) {
+                scheduleAlarm(alarm);
+            } else {
+                cancelAlarm(alarm);
+            }
+        });
         
         rvAlarms.setLayoutManager(new LinearLayoutManager(this));
         rvAlarms.setAdapter(adapter);
@@ -110,5 +117,14 @@ public class MainActivity extends AppCompatActivity {
         } catch (SecurityException e) {
             Toast.makeText(this, "Permission required to set exact alarms", Toast.LENGTH_LONG).show();
         }
+    }
+
+    private void cancelAlarm(Alarm alarm) {
+        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        Intent intent = new Intent(this, AlarmReceiver.class);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, alarm.getId(), intent, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
+        
+        alarmManager.cancel(pendingIntent);
+        Toast.makeText(this, "Alarm cancelled", Toast.LENGTH_SHORT).show();
     }
 }

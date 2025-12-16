@@ -12,9 +12,24 @@ import java.util.List;
 public class AlarmAdapter extends RecyclerView.Adapter<AlarmAdapter.AlarmViewHolder> {
 
     private List<Alarm> alarmList;
+    private OnAlarmToggleListener listener;
 
+    public interface OnAlarmToggleListener {
+        void onToggle(Alarm alarm, boolean isEnabled);
+    }
+
+    public AlarmAdapter(List<Alarm> alarmList, OnAlarmToggleListener listener) {
+        this.alarmList = alarmList;
+        this.listener = listener;
+    }
+
+    // Constructor without listener for backward compatibility if needed, though we will update usage
     public AlarmAdapter(List<Alarm> alarmList) {
         this.alarmList = alarmList;
+    }
+
+    public void setOnAlarmToggleListener(OnAlarmToggleListener listener) {
+        this.listener = listener;
     }
 
     @NonNull
@@ -29,10 +44,16 @@ public class AlarmAdapter extends RecyclerView.Adapter<AlarmAdapter.AlarmViewHol
         Alarm alarm = alarmList.get(position);
         holder.tvTime.setText(alarm.getTimeString());
         holder.tvChallenge.setText(alarm.getChallengeType() + " - Lvl " + alarm.getDifficultyLevel());
+        
+        // Remove listener temporarily to avoid triggering it during recycling
+        holder.switchAlarm.setOnCheckedChangeListener(null);
         holder.switchAlarm.setChecked(alarm.isEnabled());
         
         holder.switchAlarm.setOnCheckedChangeListener((buttonView, isChecked) -> {
             alarm.setEnabled(isChecked);
+            if (listener != null) {
+                listener.onToggle(alarm, isChecked);
+            }
         });
     }
 
