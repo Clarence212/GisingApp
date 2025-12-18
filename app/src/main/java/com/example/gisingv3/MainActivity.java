@@ -89,7 +89,7 @@ public class MainActivity extends AppCompatActivity {
         intent.putExtra("challenge_type", alarm.getChallengeType());
         intent.putExtra("difficulty", alarm.getDifficultyLevel());
         
-        // Use a unique request code for each alarm
+
         PendingIntent pendingIntent = PendingIntent.getBroadcast(this, alarm.getId(), intent, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
 
         Calendar calendar = Calendar.getInstance();
@@ -97,7 +97,7 @@ public class MainActivity extends AppCompatActivity {
         calendar.set(Calendar.MINUTE, alarm.getMinute());
         calendar.set(Calendar.SECOND, 0);
 
-        // If the time is in the past, add one day
+
         if (calendar.getTimeInMillis() <= System.currentTimeMillis()) {
             calendar.add(Calendar.DAY_OF_YEAR, 1);
         }
@@ -107,7 +107,7 @@ public class MainActivity extends AppCompatActivity {
                 if (alarmManager.canScheduleExactAlarms()) {
                     alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
                 } else {
-                    // Just set inexact if permission not granted, or prompt user (omitted for brevity)
+
                      alarmManager.setExact(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
                 }
             } else {

@@ -20,7 +20,6 @@ public class AddAlarmActivity extends AppCompatActivity {
     private LinearLayout cardMath, cardShake;
     private LinearLayout cardEasy, cardMedium, cardHard;
 
-    // Day TextViews
     private TextView[] dayViews;
     private final boolean[] daysSelected = {false, false, false, false, false, false, false}; // S, M, T, W, T, F, S
 
@@ -69,7 +68,7 @@ public class AddAlarmActivity extends AppCompatActivity {
             updateDaySelection(i); // Initialize appearance
         }
 
-        // Listeners
+
         btnBack.setOnClickListener(v -> finish());
 
         tvTimeInput.setOnClickListener(v -> showTimePicker());
@@ -100,11 +99,10 @@ public class AddAlarmActivity extends AppCompatActivity {
         });
 
         saveButton.setOnClickListener(view -> {
-            // Generate a somewhat unique ID
+
             int id = (int) (System.currentTimeMillis() % Integer.MAX_VALUE);
 
-            // Note: Currently Alarm model doesn't store days, but we could add it easily.
-            // For now, we just save the other parameters as before.
+
             Alarm alarm = new Alarm(id, selectedHour, selectedMinute, selectedChallenge, selectedDifficulty, true);
 
             Intent resultIntent = new Intent();

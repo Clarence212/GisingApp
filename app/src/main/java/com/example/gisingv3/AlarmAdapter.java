@@ -45,7 +45,7 @@ public class AlarmAdapter extends RecyclerView.Adapter<AlarmAdapter.AlarmViewHol
         holder.tvTime.setText(alarm.getTimeString());
         holder.tvChallenge.setText(alarm.getChallengeType() + " - Lvl " + alarm.getDifficultyLevel());
         
-        // Remove listener temporarily to avoid triggering it during recycling
+
         holder.switchAlarm.setOnCheckedChangeListener(null);
         holder.switchAlarm.setChecked(alarm.isEnabled());
         

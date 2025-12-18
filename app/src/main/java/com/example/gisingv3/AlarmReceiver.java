@@ -10,7 +10,7 @@ public class AlarmReceiver extends BroadcastReceiver {
         Intent alarmIntent = new Intent(context, AlarmRingActivity.class);
         alarmIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         
-        // Pass any extras from the broadcast intent to the activity intent
+
         if (intent.getExtras() != null) {
             alarmIntent.putExtras(intent.getExtras());
         }

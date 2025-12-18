@@ -17,7 +17,7 @@ public class AlarmRingActivity extends AppCompatActivity {
     private TextView tvChallengePrompt;
     private Button btnSolveChallenge;
     
-    // We would retrieve challenge type from intent
+
     private String challengeType = "None";
     private int difficulty = 1;
 
@@ -30,12 +30,11 @@ public class AlarmRingActivity extends AppCompatActivity {
         tvChallengePrompt = findViewById(R.id.tvChallengePrompt);
         btnSolveChallenge = findViewById(R.id.btnSolveChallenge);
         
-        // Show current time
+
         SimpleDateFormat sdf = new SimpleDateFormat("HH:mm", Locale.getDefault());
         tvRingTime.setText(sdf.format(new Date()));
         
-        // Retrieve alarm data from intent (assuming passed via AlarmReceiver)
-        // In a real implementation, you'd pass Serializable Alarm object or fields
+
         if (getIntent() != null) {
             challengeType = getIntent().getStringExtra("challenge_type");
             difficulty = getIntent().getIntExtra("difficulty", 1);
@@ -47,8 +46,7 @@ public class AlarmRingActivity extends AppCompatActivity {
         btnSolveChallenge.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // Here we would navigate to the specific challenge activity
-                // For now, we simulate solving it
+
                 Toast.makeText(AlarmRingActivity.this, "Challenge Solved! Alarm Off.", Toast.LENGTH_SHORT).show();
                 finish();
             }
