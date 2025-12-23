@@ -51,7 +51,8 @@
             android:launchMode="singleInstance"
             android:excludeFromRecents="true"
             android:showWhenLocked="true"
-            android:screenOrientation="portrait" />
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustResize" />
 
     </application>
 
