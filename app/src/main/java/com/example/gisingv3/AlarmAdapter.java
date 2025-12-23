@@ -3,6 +3,7 @@ package com.example.gisingv3;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
 import android.widget.Switch;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
@@ -12,23 +13,16 @@ import java.util.List;
 public class AlarmAdapter extends RecyclerView.Adapter<AlarmAdapter.AlarmViewHolder> {
 
     private List<Alarm> alarmList;
-    private OnAlarmToggleListener listener;
+    private OnAlarmListener listener;
 
-    public interface OnAlarmToggleListener {
+    public interface OnAlarmListener {
         void onToggle(Alarm alarm, boolean isEnabled);
+        void onDelete(Alarm alarm, int position);
+        void onItemClick(Alarm alarm, int position);
     }
 
-    public AlarmAdapter(List<Alarm> alarmList, OnAlarmToggleListener listener) {
+    public AlarmAdapter(List<Alarm> alarmList, OnAlarmListener listener) {
         this.alarmList = alarmList;
-        this.listener = listener;
-    }
-
-    // Constructor without listener for backward compatibility if needed, though we will update usage
-    public AlarmAdapter(List<Alarm> alarmList) {
-        this.alarmList = alarmList;
-    }
-
-    public void setOnAlarmToggleListener(OnAlarmToggleListener listener) {
         this.listener = listener;
     }
 
@@ -45,7 +39,6 @@ public class AlarmAdapter extends RecyclerView.Adapter<AlarmAdapter.AlarmViewHol
         holder.tvTime.setText(alarm.getTimeString());
         holder.tvChallenge.setText(alarm.getChallengeType() + " - Lvl " + alarm.getDifficultyLevel());
         
-
         holder.switchAlarm.setOnCheckedChangeListener(null);
         holder.switchAlarm.setChecked(alarm.isEnabled());
         
@@ -53,6 +46,18 @@ public class AlarmAdapter extends RecyclerView.Adapter<AlarmAdapter.AlarmViewHol
             alarm.setEnabled(isChecked);
             if (listener != null) {
                 listener.onToggle(alarm, isChecked);
+            }
+        });
+
+        holder.btnDelete.setOnClickListener(v -> {
+            if (listener != null) {
+                listener.onDelete(alarm, holder.getAdapterPosition());
+            }
+        });
+
+        holder.itemView.setOnClickListener(v -> {
+            if (listener != null) {
+                listener.onItemClick(alarm, holder.getAdapterPosition());
             }
         });
     }
@@ -66,12 +71,14 @@ public class AlarmAdapter extends RecyclerView.Adapter<AlarmAdapter.AlarmViewHol
         TextView tvTime;
         TextView tvChallenge;
         Switch switchAlarm;
+        ImageButton btnDelete;
 
         public AlarmViewHolder(@NonNull View itemView) {
             super(itemView);
             tvTime = itemView.findViewById(R.id.tvAlarmTime);
             tvChallenge = itemView.findViewById(R.id.tvAlarmChallenge);
             switchAlarm = itemView.findViewById(R.id.switchAlarm);
+            btnDelete = itemView.findViewById(R.id.btnDeleteAlarm);
         }
     }
 }
