@@ -27,17 +27,29 @@ public class MainActivity extends AppCompatActivity {
     private TextView tvNoAlarms;
     private AlarmAdapter adapter;
     private List<Alarm> alarmList;
+    private int editingPosition = -1;
 
-    private final ActivityResultLauncher<Intent> addAlarmLauncher = registerForActivityResult(
+    private final ActivityResultLauncher<Intent> alarmActivityLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
             result -> {
                 if (result.getResultCode() == RESULT_OK && result.getData() != null) {
-                    Alarm newAlarm = (Alarm) result.getData().getSerializableExtra("new_alarm");
-                    if (newAlarm != null) {
-                        alarmList.add(newAlarm);
-                        adapter.notifyItemInserted(alarmList.size() - 1);
+                    Alarm alarm = (Alarm) result.getData().getSerializableExtra("new_alarm");
+                    if (alarm != null) {
+                        if (editingPosition != -1) {
+                            // Updating an existing alarm
+                            cancelAlarm(alarmList.get(editingPosition));
+                            alarmList.set(editingPosition, alarm);
+                            adapter.notifyItemChanged(editingPosition);
+                            editingPosition = -1;
+                        } else {
+                            // Adding a new alarm
+                            alarmList.add(alarm);
+                            adapter.notifyItemInserted(alarmList.size() - 1);
+                        }
                         updateEmptyState();
-                        scheduleAlarm(newAlarm);
+                        if (alarm.isEnabled()) {
+                            scheduleAlarm(alarm);
+                        }
                     }
                 }
             }
@@ -53,12 +65,31 @@ public class MainActivity extends AppCompatActivity {
         FloatingActionButton btnAddAlarm = findViewById(R.id.btnAddAlarm);
 
         alarmList = new ArrayList<>();
-        adapter = new AlarmAdapter(alarmList);
-        adapter.setOnAlarmToggleListener((alarm, isEnabled) -> {
-            if (isEnabled) {
-                scheduleAlarm(alarm);
-            } else {
+        adapter = new AlarmAdapter(alarmList, new AlarmAdapter.OnAlarmListener() {
+            @Override
+            public void onToggle(Alarm alarm, boolean isEnabled) {
+                if (isEnabled) {
+                    scheduleAlarm(alarm);
+                } else {
+                    cancelAlarm(alarm);
+                }
+            }
+
+            @Override
+            public void onDelete(Alarm alarm, int position) {
                 cancelAlarm(alarm);
+                alarmList.remove(position);
+                adapter.notifyItemRemoved(position);
+                updateEmptyState();
+                Toast.makeText(MainActivity.this, "Alarm Deleted", Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onItemClick(Alarm alarm, int position) {
+                editingPosition = position;
+                Intent intent = new Intent(MainActivity.this, AddAlarmActivity.class);
+                intent.putExtra("edit_alarm", alarm);
+                alarmActivityLauncher.launch(intent);
             }
         });
         
@@ -68,8 +99,9 @@ public class MainActivity extends AppCompatActivity {
         updateEmptyState();
 
         btnAddAlarm.setOnClickListener(view -> {
+            editingPosition = -1;
             Intent intent = new Intent(MainActivity.this, AddAlarmActivity.class);
-            addAlarmLauncher.launch(intent);
+            alarmActivityLauncher.launch(intent);
         });
     }
 
@@ -89,14 +121,12 @@ public class MainActivity extends AppCompatActivity {
         intent.putExtra("challenge_type", alarm.getChallengeType());
         intent.putExtra("difficulty", alarm.getDifficultyLevel());
         
-
         PendingIntent pendingIntent = PendingIntent.getBroadcast(this, alarm.getId(), intent, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
 
         Calendar calendar = Calendar.getInstance();
         calendar.set(Calendar.HOUR_OF_DAY, alarm.getHour());
         calendar.set(Calendar.MINUTE, alarm.getMinute());
         calendar.set(Calendar.SECOND, 0);
-
 
         if (calendar.getTimeInMillis() <= System.currentTimeMillis()) {
             calendar.add(Calendar.DAY_OF_YEAR, 1);
@@ -107,7 +137,6 @@ public class MainActivity extends AppCompatActivity {
                 if (alarmManager.canScheduleExactAlarms()) {
                     alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
                 } else {
-
                      alarmManager.setExact(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
                 }
             } else {
@@ -115,7 +144,7 @@ public class MainActivity extends AppCompatActivity {
             }
             Toast.makeText(this, "Alarm set for " + alarm.getTimeString(), Toast.LENGTH_SHORT).show();
         } catch (SecurityException e) {
-            Toast.makeText(this, "Permission required to set exact alarms", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "Permission required for exact alarms", Toast.LENGTH_LONG).show();
         }
     }
 
@@ -124,7 +153,8 @@ public class MainActivity extends AppCompatActivity {
         Intent intent = new Intent(this, AlarmReceiver.class);
         PendingIntent pendingIntent = PendingIntent.getBroadcast(this, alarm.getId(), intent, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
         
-        alarmManager.cancel(pendingIntent);
-        Toast.makeText(this, "Alarm cancelled", Toast.LENGTH_SHORT).show();
+        if (alarmManager != null) {
+            alarmManager.cancel(pendingIntent);
+        }
     }
 }

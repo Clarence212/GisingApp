@@ -27,6 +27,7 @@ public class AddAlarmActivity extends AppCompatActivity {
     private int selectedMinute = 0;
     private String selectedChallenge = "Math Problem";
     private int selectedDifficulty = 2; // 1=Easy, 2=Medium, 3=Hard
+    private int existingId = -1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,6 +53,18 @@ public class AddAlarmActivity extends AppCompatActivity {
         dayViews[4] = findViewById(R.id.dayThu);
         dayViews[5] = findViewById(R.id.dayFri);
         dayViews[6] = findViewById(R.id.daySat);
+
+        // Check for edit mode
+        if (getIntent().hasExtra("edit_alarm")) {
+            Alarm editAlarm = (Alarm) getIntent().getSerializableExtra("edit_alarm");
+            if (editAlarm != null) {
+                existingId = editAlarm.getId();
+                selectedHour = editAlarm.getHour();
+                selectedMinute = editAlarm.getMinute();
+                selectedChallenge = editAlarm.getChallengeType();
+                selectedDifficulty = editAlarm.getDifficultyLevel();
+            }
+        }
 
         // Set initial state
         updateTimeDisplay();
@@ -99,10 +112,7 @@ public class AddAlarmActivity extends AppCompatActivity {
         });
 
         saveButton.setOnClickListener(view -> {
-
-            int id = (int) (System.currentTimeMillis() % Integer.MAX_VALUE);
-
-
+            int id = (existingId != -1) ? existingId : (int) (System.currentTimeMillis() % Integer.MAX_VALUE);
             Alarm alarm = new Alarm(id, selectedHour, selectedMinute, selectedChallenge, selectedDifficulty, true);
 
             Intent resultIntent = new Intent();
