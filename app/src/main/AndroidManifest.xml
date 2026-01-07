@@ -38,6 +38,7 @@
         <activity 
             android:name=".AlarmRingActivity"
             android:exported="false"
+            android:theme="@style/Theme.GISINGv3.AlarmRing"
             android:showOnLockScreen="true"
             android:turnScreenOn="true"
             android:launchMode="singleInstance" />

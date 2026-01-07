@@ -7,4 +7,20 @@
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    
+    <color name="app_background">#F5F5F5</color>
+    <color name="primary_color">#4364F7</color>
+    <color name="input_background">#FFFFFF</color>
+    <color name="card_background">#FFFFFF</color>
+    
+    <!-- Added for specific form elements -->
+    <color name="form_label">#555555</color>
+    <color name="selector_unselected">#E0E0E0</color>
+    <color name="selector_selected">#4364F7</color>
+    <color name="text_on_selector_selected">#FFFFFF</color>
+    <color name="text_on_selector_unselected">#555555</color>
+
+    <!-- Missing colors that caused the crash in light mode -->
+    <color name="text_primary">#000000</color>
+    <color name="text_secondary">#666666</color>
 </resources>

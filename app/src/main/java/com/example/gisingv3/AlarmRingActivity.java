@@ -1,7 +1,9 @@
 package com.example.gisingv3;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AppCompatActivity;
 import android.app.KeyguardManager;
+import android.app.NotificationManager;
 import android.content.Context;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -20,6 +22,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
+import androidx.core.app.NotificationCompat;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -84,6 +87,13 @@ public class AlarmRingActivity extends AppCompatActivity implements SensorEventL
         
         setupChallenge();
         startAlarmEffects();
+
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                Toast.makeText(AlarmRingActivity.this, "Finish the challenge to stop the alarm!", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     private void setupChallenge() {
@@ -92,9 +102,8 @@ public class AlarmRingActivity extends AppCompatActivity implements SensorEventL
             etMathAnswer.setVisibility(View.GONE);
             btnSolveChallenge.setVisibility(View.GONE);
             
-            // Set required shakes based on difficulty (reduced for better experience)
             requiredShakes = 10 * difficulty;
-            tvChallengePrompt.setText("Shakes remaining: " + requiredShakes);
+            tvChallengePrompt.setText(String.format(Locale.getDefault(), "Shakes remaining: %d", requiredShakes));
             
             sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
             if (sensorManager != null) {
@@ -131,7 +140,7 @@ public class AlarmRingActivity extends AppCompatActivity implements SensorEventL
             mediaPlayer.prepare();
             mediaPlayer.start();
         } catch (Exception e) {
-            e.printStackTrace();
+            // Log error
         }
 
         vibrator = (Vibrator) getSystemService(VIBRATOR_SERVICE);
@@ -150,24 +159,24 @@ public class AlarmRingActivity extends AppCompatActivity implements SensorEventL
                 a = random.nextInt(10) + 1;
                 b = random.nextInt(10) + 1;
                 correctAnswer = a + b;
-                tvMathQuestion.setText(a + " + " + b + " = ?");
+                tvMathQuestion.setText(String.format(Locale.getDefault(), "%d + %d = ?", a, b));
                 break;
             case 2:
                 a = random.nextInt(50) + 10;
                 b = random.nextInt(50) + 1;
                 if (random.nextBoolean()) {
                     correctAnswer = a + b;
-                    tvMathQuestion.setText(a + " + " + b + " = ?");
+                    tvMathQuestion.setText(String.format(Locale.getDefault(), "%d + %d = ?", a, b));
                 } else {
                     correctAnswer = a - b;
-                    tvMathQuestion.setText(a + " - " + b + " = ?");
+                    tvMathQuestion.setText(String.format(Locale.getDefault(), "%d - %d = ?", a, b));
                 }
                 break;
             case 3:
                 a = random.nextInt(12) + 2;
                 b = random.nextInt(12) + 2;
                 correctAnswer = a * b;
-                tvMathQuestion.setText(a + " × " + b + " = ?");
+                tvMathQuestion.setText(String.format(Locale.getDefault(), "%d × %d = ?", a, b));
                 break;
         }
     }
@@ -191,7 +200,23 @@ public class AlarmRingActivity extends AppCompatActivity implements SensorEventL
 
     private void onChallengeSolved() {
         stopAlarm();
-        Toast.makeText(this, "Good Morning!", Toast.LENGTH_SHORT).show();
+        
+        // Update notification to be dismissible
+        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        if (notificationManager != null) {
+            NotificationCompat.Builder builder = new NotificationCompat.Builder(this, "ALARM_CHANNEL")
+                    .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
+                    .setContentTitle("ALARM")
+                    .setContentText("Challenge solved! Swipe to dismiss.")
+                    .setPriority(NotificationCompat.PRIORITY_HIGH)
+                    .setCategory(NotificationCompat.CATEGORY_ALARM)
+                    .setOngoing(false) // Make it swipeable
+                    .setAutoCancel(true);
+            
+            notificationManager.notify(1, builder.build());
+        }
+
+        Toast.makeText(this, "Good Morning! Swipe notification to dismiss.", Toast.LENGTH_LONG).show();
         finish();
     }
 
@@ -216,25 +241,21 @@ public class AlarmRingActivity extends AppCompatActivity implements SensorEventL
             float y = event.values[1];
             float z = event.values[2];
 
-            // Calculate g-force
             float gForce = (float) Math.sqrt(x * x + y * y + z * z) / SensorManager.GRAVITY_EARTH;
 
-            // Sensitivity threshold (2.0 is a firm shake)
             if (gForce > 2.0f) {
                 long now = System.currentTimeMillis();
-                // Avoid counting multiple times for one movement (300ms gap)
                 if (lastShakeTime + 300 > now) {
                     return;
                 }
                 lastShakeTime = now;
                 shakeCount++;
 
-                int remaining = requiredShakes - shakeCount;
-                if (remaining <= 0) {
-                    tvChallengePrompt.setText("Shakes remaining: 0");
+                int remaining = Math.max(0, requiredShakes - shakeCount);
+                tvChallengePrompt.setText(String.format(Locale.getDefault(), "Shakes remaining: %d", remaining));
+                
+                if (remaining == 0) {
                     onChallengeSolved();
-                } else {
-                    tvChallengePrompt.setText("Shakes remaining: " + remaining);
                 }
             }
         }
@@ -244,19 +265,8 @@ public class AlarmRingActivity extends AppCompatActivity implements SensorEventL
     public void onAccuracyChanged(Sensor sensor, int accuracy) {}
 
     @Override
-    protected void onPause() {
-        super.onPause();
-        // We usually don't unregister here for alarms to keep them ringing
-    }
-
-    @Override
     protected void onDestroy() {
         super.onDestroy();
         stopAlarm();
-    }
-
-    @Override
-    public void onBackPressed() {
-        Toast.makeText(this, "Finish the challenge to stop the alarm!", Toast.LENGTH_SHORT).show();
     }
 }

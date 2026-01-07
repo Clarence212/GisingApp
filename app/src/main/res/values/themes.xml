@@ -13,4 +13,10 @@
         <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>
         <!-- Customize your theme here. -->
     </style>
+
+    <!-- Theme for Alarm Ringing screen (forced light/colorful) -->
+    <style name="Theme.GISINGv3.AlarmRing" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <item name="android:windowBackground">#FF5722</item>
+        <item name="android:statusBarColor">#FF5722</item>
+    </style>
 </resources>

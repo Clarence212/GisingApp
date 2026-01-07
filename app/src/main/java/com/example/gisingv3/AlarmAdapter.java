@@ -1,5 +1,7 @@
 package com.example.gisingv3;
 
+import android.content.res.Configuration;
+import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -42,8 +44,12 @@ public class AlarmAdapter extends RecyclerView.Adapter<AlarmAdapter.AlarmViewHol
         holder.switchAlarm.setOnCheckedChangeListener(null);
         holder.switchAlarm.setChecked(alarm.isEnabled());
         
+        // Initial color state
+        updateItemAppearance(holder, alarm.isEnabled());
+        
         holder.switchAlarm.setOnCheckedChangeListener((buttonView, isChecked) -> {
             alarm.setEnabled(isChecked);
+            updateItemAppearance(holder, isChecked);
             if (listener != null) {
                 listener.onToggle(alarm, isChecked);
             }
@@ -60,6 +66,27 @@ public class AlarmAdapter extends RecyclerView.Adapter<AlarmAdapter.AlarmViewHol
                 listener.onItemClick(alarm, holder.getAdapterPosition());
             }
         });
+    }
+
+    private void updateItemAppearance(AlarmViewHolder holder, boolean isEnabled) {
+        int nightModeFlags = holder.itemView.getContext().getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
+        boolean isDarkMode = nightModeFlags == Configuration.UI_MODE_NIGHT_YES;
+
+        if (isEnabled) {
+            if (isDarkMode) {
+                holder.tvTime.setTextColor(Color.WHITE);
+                holder.tvChallenge.setTextColor(Color.parseColor("#BBBBBB"));
+            } else {
+                holder.tvTime.setTextColor(Color.parseColor("#333333"));
+                holder.tvChallenge.setTextColor(Color.parseColor("#888888"));
+            }
+            holder.itemView.setAlpha(1.0f);
+        } else {
+            // Grayish colors for disabled state
+            holder.tvTime.setTextColor(Color.parseColor("#AAAAAA"));
+            holder.tvChallenge.setTextColor(Color.parseColor("#CCCCCC"));
+            holder.itemView.setAlpha(0.6f); // Dim the whole card
+        }
     }
 
     @Override
