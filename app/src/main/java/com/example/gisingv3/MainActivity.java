@@ -46,6 +46,7 @@ public class MainActivity extends AppCompatActivity {
                             alarmList.add(alarm);
                             adapter.notifyItemInserted(alarmList.size() - 1);
                         }
+                        saveAlarms();
                         updateEmptyState();
                         if (alarm.isEnabled()) {
                             scheduleAlarm(alarm);
@@ -64,7 +65,14 @@ public class MainActivity extends AppCompatActivity {
         tvNoAlarms = findViewById(R.id.tvNoAlarms);
         FloatingActionButton btnAddAlarm = findViewById(R.id.btnAddAlarm);
 
-        alarmList = new ArrayList<>();
+        // Load alarms from storage
+        alarmList = AlarmStorage.loadAlarms(this);
+        if (alarmList == null) {
+            alarmList = new ArrayList<>();
+        }
+
+        rescheduleActiveAlarms();
+
         adapter = new AlarmAdapter(alarmList, new AlarmAdapter.OnAlarmListener() {
             @Override
             public void onToggle(Alarm alarm, boolean isEnabled) {
@@ -73,6 +81,7 @@ public class MainActivity extends AppCompatActivity {
                 } else {
                     cancelAlarm(alarm);
                 }
+                saveAlarms(); // Save changes
             }
 
             @Override
@@ -80,6 +89,7 @@ public class MainActivity extends AppCompatActivity {
                 cancelAlarm(alarm);
                 alarmList.remove(position);
                 adapter.notifyItemRemoved(position);
+                saveAlarms(); // Save changes
                 updateEmptyState();
                 Toast.makeText(MainActivity.this, "Alarm Deleted", Toast.LENGTH_SHORT).show();
             }
@@ -103,6 +113,18 @@ public class MainActivity extends AppCompatActivity {
             Intent intent = new Intent(MainActivity.this, AddAlarmActivity.class);
             alarmActivityLauncher.launch(intent);
         });
+    }
+
+    private void saveAlarms() {
+        AlarmStorage.saveAlarms(this, alarmList);
+    }
+
+    private void rescheduleActiveAlarms() {
+        for (Alarm alarm : alarmList) {
+            if (alarm.isEnabled()) {
+                scheduleAlarm(alarm);
+            }
+        }
     }
 
     private void updateEmptyState() {
