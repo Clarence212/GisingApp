@@ -21,12 +21,12 @@ public class AddAlarmActivity extends AppCompatActivity {
     private LinearLayout cardEasy, cardMedium, cardHard;
 
     private TextView[] dayViews;
-    private final boolean[] daysSelected = {false, false, false, false, false, false, false}; // S, M, T, W, T, F, S
+    private boolean[] daysSelected = {false, false, false, false, false, false, false}; // S, M, T, W, T, F, S
 
     private int selectedHour = 7;
     private int selectedMinute = 0;
     private String selectedChallenge = "Math Problem";
-    private int selectedDifficulty = 2; // 1=Easy, 2=Medium, 3=Hard
+    private int selectedDifficulty = 2;
     private int existingId = -1;
 
     @Override
@@ -34,7 +34,6 @@ public class AddAlarmActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_alarm);
 
-        // Initialize Views
         tvTimeInput = findViewById(R.id.tvTimeInput);
         cardMath = findViewById(R.id.cardMath);
         cardShake = findViewById(R.id.cardShake);
@@ -44,7 +43,6 @@ public class AddAlarmActivity extends AppCompatActivity {
         Button saveButton = findViewById(R.id.saveAlarmButton);
         ImageButton btnBack = findViewById(R.id.btnBack);
 
-        // Initialize Day Views
         dayViews = new TextView[7];
         dayViews[0] = findViewById(R.id.daySun);
         dayViews[1] = findViewById(R.id.dayMon);
@@ -54,7 +52,6 @@ public class AddAlarmActivity extends AppCompatActivity {
         dayViews[5] = findViewById(R.id.dayFri);
         dayViews[6] = findViewById(R.id.daySat);
 
-        // Check for edit mode
         if (getIntent().hasExtra("edit_alarm")) {
             Alarm editAlarm = (Alarm) getIntent().getSerializableExtra("edit_alarm");
             if (editAlarm != null) {
@@ -63,63 +60,41 @@ public class AddAlarmActivity extends AppCompatActivity {
                 selectedMinute = editAlarm.getMinute();
                 selectedChallenge = editAlarm.getChallengeType();
                 selectedDifficulty = editAlarm.getDifficultyLevel();
+                if (editAlarm.getDaysSelected() != null) {
+                    daysSelected = editAlarm.getDaysSelected().clone();
+                }
             }
         }
 
-        // Set initial state
         updateTimeDisplay();
         updateChallengeSelection();
         updateDifficultySelection();
         
-        // Setup Day Click Listeners
         for (int i = 0; i < 7; i++) {
             final int dayIndex = i;
             dayViews[i].setOnClickListener(v -> {
                 daysSelected[dayIndex] = !daysSelected[dayIndex];
                 updateDaySelection(dayIndex);
             });
-            updateDaySelection(i); // Initialize appearance
+            updateDaySelection(i);
         }
 
-
         btnBack.setOnClickListener(v -> finish());
-
         tvTimeInput.setOnClickListener(v -> showTimePicker());
-
-        cardMath.setOnClickListener(v -> {
-            selectedChallenge = "Math Problem";
-            updateChallengeSelection();
-        });
-
-        cardShake.setOnClickListener(v -> {
-            selectedChallenge = "Shake Phone";
-            updateChallengeSelection();
-        });
-
-        cardEasy.setOnClickListener(v -> {
-            selectedDifficulty = 1;
-            updateDifficultySelection();
-        });
-
-        cardMedium.setOnClickListener(v -> {
-            selectedDifficulty = 2;
-            updateDifficultySelection();
-        });
-
-        cardHard.setOnClickListener(v -> {
-            selectedDifficulty = 3;
-            updateDifficultySelection();
-        });
+        cardMath.setOnClickListener(v -> { selectedChallenge = "Math Problem"; updateChallengeSelection(); });
+        cardShake.setOnClickListener(v -> { selectedChallenge = "Shake Phone"; updateChallengeSelection(); });
+        cardEasy.setOnClickListener(v -> { selectedDifficulty = 1; updateDifficultySelection(); });
+        cardMedium.setOnClickListener(v -> { selectedDifficulty = 2; updateDifficultySelection(); });
+        cardHard.setOnClickListener(v -> { selectedDifficulty = 3; updateDifficultySelection(); });
 
         saveButton.setOnClickListener(view -> {
             int id = (existingId != -1) ? existingId : (int) (System.currentTimeMillis() % Integer.MAX_VALUE);
-            Alarm alarm = new Alarm(id, selectedHour, selectedMinute, selectedChallenge, selectedDifficulty, true);
+            // Pass daysSelected to constructor
+            Alarm alarm = new Alarm(id, selectedHour, selectedMinute, selectedChallenge, selectedDifficulty, true, daysSelected.clone());
 
             Intent resultIntent = new Intent();
             resultIntent.putExtra("new_alarm", alarm);
             setResult(RESULT_OK, resultIntent);
-
-            Toast.makeText(AddAlarmActivity.this, "Alarm Saved", Toast.LENGTH_SHORT).show();
             finish();
         });
     }
@@ -130,7 +105,7 @@ public class AddAlarmActivity extends AppCompatActivity {
                     selectedHour = hourOfDay;
                     selectedMinute = minute;
                     updateTimeDisplay();
-                }, selectedHour, selectedMinute, false); // Set is24HourView to false
+                }, selectedHour, selectedMinute, false);
         timePickerDialog.show();
     }
 
@@ -138,8 +113,7 @@ public class AddAlarmActivity extends AppCompatActivity {
         String amPm = selectedHour >= 12 ? "PM" : "AM";
         int hour12 = selectedHour % 12;
         if (hour12 == 0) hour12 = 12;
-        String timeStr = String.format(Locale.getDefault(), "%02d:%02d %s", hour12, selectedMinute, amPm);
-        tvTimeInput.setText(timeStr);
+        tvTimeInput.setText(String.format(Locale.getDefault(), "%02d:%02d %s", hour12, selectedMinute, amPm));
     }
     
     private void updateDaySelection(int index) {
@@ -157,13 +131,11 @@ public class AddAlarmActivity extends AppCompatActivity {
         if ("Math Problem".equals(selectedChallenge)) {
             cardMath.setBackgroundResource(R.drawable.bg_option_selected);
             setChildTextColor(cardMath, true);
-            
             cardShake.setBackgroundResource(R.drawable.bg_option_unselected);
             setChildTextColor(cardShake, false);
         } else {
             cardMath.setBackgroundResource(R.drawable.bg_option_unselected);
             setChildTextColor(cardMath, false);
-            
             cardShake.setBackgroundResource(R.drawable.bg_option_selected);
             setChildTextColor(cardShake, true);
         }
@@ -173,7 +145,6 @@ public class AddAlarmActivity extends AppCompatActivity {
         cardEasy.setBackgroundResource(R.drawable.bg_difficulty_unselected);
         cardMedium.setBackgroundResource(R.drawable.bg_difficulty_unselected);
         cardHard.setBackgroundResource(R.drawable.bg_difficulty_unselected);
-        
         setChildTextColor(cardEasy, false);
         setChildTextColor(cardMedium, false);
         setChildTextColor(cardHard, false);
@@ -191,20 +162,12 @@ public class AddAlarmActivity extends AppCompatActivity {
     }
     
     private void setChildTextColor(LinearLayout container, boolean isSelected) {
-        int color;
-        if (isSelected) {
-            color = Color.WHITE;
-        } else {
-            color = Color.parseColor("#555555");
-        }
-
+        int color = isSelected ? Color.WHITE : Color.parseColor("#555555");
         for (int i = 0; i < container.getChildCount(); i++) {
             View child = container.getChildAt(i);
             if (child instanceof TextView) {
                 TextView tv = (TextView) child;
-                if (!tv.getText().toString().contains("★")) {
-                    tv.setTextColor(color);
-                }
+                if (!tv.getText().toString().contains("★")) tv.setTextColor(color);
             }
         }
     }

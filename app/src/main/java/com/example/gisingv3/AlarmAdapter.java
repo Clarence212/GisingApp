@@ -37,6 +37,7 @@ public class AlarmAdapter extends RecyclerView.Adapter<AlarmAdapter.AlarmViewHol
     public void onBindViewHolder(@NonNull AlarmViewHolder holder, int position) {
         Alarm alarm = alarmList.get(position);
         holder.tvTime.setText(alarm.getTimeString());
+        holder.tvDays.setText(alarm.getDaysDisplay());
         holder.tvChallenge.setText(alarm.getChallengeType() + " - Lvl " + alarm.getDifficultyLevel());
         
         holder.switchAlarm.setOnCheckedChangeListener(null);
@@ -69,6 +70,7 @@ public class AlarmAdapter extends RecyclerView.Adapter<AlarmAdapter.AlarmViewHol
 
     public static class AlarmViewHolder extends RecyclerView.ViewHolder {
         TextView tvTime;
+        TextView tvDays;
         TextView tvChallenge;
         Switch switchAlarm;
         ImageButton btnDelete;
@@ -76,6 +78,7 @@ public class AlarmAdapter extends RecyclerView.Adapter<AlarmAdapter.AlarmViewHol
         public AlarmViewHolder(@NonNull View itemView) {
             super(itemView);
             tvTime = itemView.findViewById(R.id.tvAlarmTime);
+            tvDays = itemView.findViewById(R.id.tvAlarmDays);
             tvChallenge = itemView.findViewById(R.id.tvAlarmChallenge);
             switchAlarm = itemView.findViewById(R.id.switchAlarm);
             btnDelete = itemView.findViewById(R.id.btnDeleteAlarm);

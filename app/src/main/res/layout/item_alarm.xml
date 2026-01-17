@@ -24,14 +24,25 @@
             app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
+            android:id="@+id/tvAlarmDays"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Mon, Tue, Wed"
+            android:textSize="14sp"
+            android:textColor="#FF5722"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvAlarmTime" />
+
+        <TextView
             android:id="@+id/tvAlarmChallenge"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Math Challenge - Hard"
-            android:textSize="14sp"
+            android:textSize="12sp"
             android:textColor="#888888"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tvAlarmTime" />
+            app:layout_constraintTop_toBottomOf="@id/tvAlarmDays" />
 
         <ImageButton
             android:id="@+id/btnDeleteAlarm"
