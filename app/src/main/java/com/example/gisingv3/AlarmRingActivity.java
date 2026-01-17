@@ -2,6 +2,7 @@ package com.example.gisingv3;
 
 import androidx.appcompat.app.AppCompatActivity;
 import android.app.KeyguardManager;
+import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
 import android.hardware.Sensor;
@@ -16,6 +17,8 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Vibrator;
+import android.text.InputFilter;
+import android.text.Spanned;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
@@ -53,7 +56,6 @@ public class AlarmRingActivity extends AppCompatActivity implements SensorEventL
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         
-        // Configure flags to show over lockscreen and keep screen on
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
                 | WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD
                 | WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED
@@ -76,6 +78,21 @@ public class AlarmRingActivity extends AppCompatActivity implements SensorEventL
         etMathAnswer = findViewById(R.id.etMathAnswer);
         btnSolveChallenge = findViewById(R.id.btnSolveChallenge);
         tvChallengePrompt = findViewById(R.id.tvChallengePrompt);
+
+        // Filter to block any characters that are not digits
+        etMathAnswer.setFilters(new InputFilter[]{
+            new InputFilter() {
+                @Override
+                public CharSequence filter(CharSequence source, int start, int end, Spanned dest, int dstart, int dend) {
+                    for (int i = start; i < end; i++) {
+                        if (!Character.isDigit(source.charAt(i))) {
+                            return "";
+                        }
+                    }
+                    return null;
+                }
+            }
+        });
 
         SimpleDateFormat sdf = new SimpleDateFormat("hh:mm a", Locale.getDefault());
         tvRingTime.setText(sdf.format(new Date()));
@@ -110,7 +127,6 @@ public class AlarmRingActivity extends AppCompatActivity implements SensorEventL
     @Override
     protected void onPause() {
         super.onPause();
-        // If the user tries to swipe away, bring the activity back
         if (!isChallengeSolved) {
             new Handler().postDelayed(() -> {
                 if (!isChallengeSolved) {
@@ -177,12 +193,48 @@ public class AlarmRingActivity extends AppCompatActivity implements SensorEventL
 
     private void generateMathProblem() {
         Random random = new Random();
-        int a, b;
+        int a, b, c;
         switch (difficulty) {
-            case 1: a = random.nextInt(10) + 1; b = random.nextInt(10) + 1; correctAnswer = a + b; tvMathQuestion.setText(a + " + " + b + " = ?"); break;
-            case 2: a = random.nextInt(50) + 10; b = random.nextInt(50) + 1; correctAnswer = a + b; tvMathQuestion.setText(a + " + " + b + " = ?"); break;
-            case 3: a = random.nextInt(12) + 2; b = random.nextInt(12) + 2; correctAnswer = a * b; tvMathQuestion.setText(a + " × " + b + " = ?"); break;
-            default: a = random.nextInt(10) + 1; b = random.nextInt(10) + 1; correctAnswer = a + b; tvMathQuestion.setText(a + " + " + b + " = ?"); break;
+            case 1:
+                a = random.nextInt(10) + 1;
+                b = random.nextInt(10) + 1;
+                correctAnswer = a + b;
+                tvMathQuestion.setText(a + " + " + b + " = ?");
+                break;
+            case 2:
+                a = random.nextInt(20) + 10;
+                b = random.nextInt(10) + 1;
+                c = random.nextInt(10) + 1;
+                if (random.nextBoolean()) {
+                    correctAnswer = a + b - c;
+                    tvMathQuestion.setText("(" + a + " + " + b + ") - " + c + " = ?");
+                } else {
+                    correctAnswer = a - b + c;
+                    tvMathQuestion.setText("(" + a + " - " + b + ") + " + c + " = ?");
+                }
+                break;
+            case 3:
+                a = random.nextInt(10) + 2;
+                b = random.nextInt(10) + 2;
+                c = random.nextInt(40) + 1;
+                if (random.nextBoolean()) {
+                    correctAnswer = (a * b) + c;
+                    tvMathQuestion.setText("(" + a + " × " + b + ") + " + c + " = ?");
+                } else {
+                    while ((a * b) < c) {
+                        a = random.nextInt(10) + 2;
+                        b = random.nextInt(10) + 2;
+                    }
+                    correctAnswer = (a * b) - c;
+                    tvMathQuestion.setText("(" + a + " × " + b + ") - " + c + " = ?");
+                }
+                break;
+            default:
+                a = random.nextInt(10) + 1;
+                b = random.nextInt(10) + 1;
+                correctAnswer = a + b;
+                tvMathQuestion.setText(a + " + " + b + " = ?");
+                break;
         }
     }
 
@@ -205,6 +257,13 @@ public class AlarmRingActivity extends AppCompatActivity implements SensorEventL
 
     private void onChallengeSolved() {
         isChallengeSolved = true;
+        
+        // Remove the ongoing notification
+        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        if (notificationManager != null) {
+            notificationManager.cancel(1); // Cancel notification with ID 1
+        }
+        
         stopAlarm();
         Toast.makeText(this, "Good Morning!", Toast.LENGTH_SHORT).show();
         finish();
