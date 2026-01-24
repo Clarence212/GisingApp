@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -19,9 +20,11 @@ public class AddAlarmActivity extends AppCompatActivity {
     private TextView tvTimeInput;
     private LinearLayout cardMath, cardShake;
     private LinearLayout cardEasy, cardMedium, cardHard;
+    private ImageView ivMathIcon, ivShakeIcon;
+    private TextView tvMathLabel, tvShakeLabel;
 
     private TextView[] dayViews;
-    private boolean[] daysSelected = {false, false, false, false, false, false, false}; // S, M, T, W, T, F, S
+    private boolean[] daysSelected = {false, false, false, false, false, false, false};
 
     private int selectedHour = 7;
     private int selectedMinute = 0;
@@ -40,6 +43,12 @@ public class AddAlarmActivity extends AppCompatActivity {
         cardEasy = findViewById(R.id.cardEasy);
         cardMedium = findViewById(R.id.cardMedium);
         cardHard = findViewById(R.id.cardHard);
+        
+        ivMathIcon = findViewById(R.id.ivMathIcon);
+        ivShakeIcon = findViewById(R.id.ivShakeIcon);
+        tvMathLabel = findViewById(R.id.tvMathLabel);
+        tvShakeLabel = findViewById(R.id.tvShakeLabel);
+        
         Button saveButton = findViewById(R.id.saveAlarmButton);
         ImageButton btnBack = findViewById(R.id.btnBack);
 
@@ -81,17 +90,35 @@ public class AddAlarmActivity extends AppCompatActivity {
 
         btnBack.setOnClickListener(v -> finish());
         tvTimeInput.setOnClickListener(v -> showTimePicker());
-        cardMath.setOnClickListener(v -> { selectedChallenge = "Math Problem"; updateChallengeSelection(); });
-        cardShake.setOnClickListener(v -> { selectedChallenge = "Shake Phone"; updateChallengeSelection(); });
-        cardEasy.setOnClickListener(v -> { selectedDifficulty = 1; updateDifficultySelection(); });
-        cardMedium.setOnClickListener(v -> { selectedDifficulty = 2; updateDifficultySelection(); });
-        cardHard.setOnClickListener(v -> { selectedDifficulty = 3; updateDifficultySelection(); });
+        
+        cardMath.setOnClickListener(v -> {
+            selectedChallenge = "Math Problem";
+            updateChallengeSelection();
+        });
+
+        cardShake.setOnClickListener(v -> {
+            selectedChallenge = "Shake Phone";
+            updateChallengeSelection();
+        });
+
+        cardEasy.setOnClickListener(v -> {
+            selectedDifficulty = 1;
+            updateDifficultySelection();
+        });
+
+        cardMedium.setOnClickListener(v -> {
+            selectedDifficulty = 2;
+            updateDifficultySelection();
+        });
+
+        cardHard.setOnClickListener(v -> {
+            selectedDifficulty = 3;
+            updateDifficultySelection();
+        });
 
         saveButton.setOnClickListener(view -> {
             int id = (existingId != -1) ? existingId : (int) (System.currentTimeMillis() % Integer.MAX_VALUE);
-            // Pass daysSelected to constructor
             Alarm alarm = new Alarm(id, selectedHour, selectedMinute, selectedChallenge, selectedDifficulty, true, daysSelected.clone());
-
             Intent resultIntent = new Intent();
             resultIntent.putExtra("new_alarm", alarm);
             setResult(RESULT_OK, resultIntent);
@@ -130,14 +157,24 @@ public class AddAlarmActivity extends AppCompatActivity {
     private void updateChallengeSelection() {
         if ("Math Problem".equals(selectedChallenge)) {
             cardMath.setBackgroundResource(R.drawable.bg_option_selected);
-            setChildTextColor(cardMath, true);
+            ivMathIcon.setColorFilter(Color.WHITE);
+            tvMathLabel.setTextColor(Color.WHITE);
+            tvMathLabel.setTypeface(null, android.graphics.Typeface.BOLD);
+
             cardShake.setBackgroundResource(R.drawable.bg_option_unselected);
-            setChildTextColor(cardShake, false);
+            ivShakeIcon.setColorFilter(Color.parseColor("#888888"));
+            tvShakeLabel.setTextColor(Color.parseColor("#888888"));
+            tvShakeLabel.setTypeface(null, android.graphics.Typeface.NORMAL);
         } else {
             cardMath.setBackgroundResource(R.drawable.bg_option_unselected);
-            setChildTextColor(cardMath, false);
+            ivMathIcon.setColorFilter(Color.parseColor("#888888"));
+            tvMathLabel.setTextColor(Color.parseColor("#888888"));
+            tvMathLabel.setTypeface(null, android.graphics.Typeface.NORMAL);
+
             cardShake.setBackgroundResource(R.drawable.bg_option_selected);
-            setChildTextColor(cardShake, true);
+            ivShakeIcon.setColorFilter(Color.WHITE);
+            tvShakeLabel.setTextColor(Color.WHITE);
+            tvShakeLabel.setTypeface(null, android.graphics.Typeface.BOLD);
         }
     }
 
@@ -145,29 +182,36 @@ public class AddAlarmActivity extends AppCompatActivity {
         cardEasy.setBackgroundResource(R.drawable.bg_difficulty_unselected);
         cardMedium.setBackgroundResource(R.drawable.bg_difficulty_unselected);
         cardHard.setBackgroundResource(R.drawable.bg_difficulty_unselected);
-        setChildTextColor(cardEasy, false);
-        setChildTextColor(cardMedium, false);
-        setChildTextColor(cardHard, false);
+        
+        setDifficultyChildStyle(cardEasy, false);
+        setDifficultyChildStyle(cardMedium, false);
+        setDifficultyChildStyle(cardHard, false);
 
         if (selectedDifficulty == 1) {
             cardEasy.setBackgroundResource(R.drawable.bg_difficulty_selected);
-            setChildTextColor(cardEasy, true);
+            setDifficultyChildStyle(cardEasy, true);
         } else if (selectedDifficulty == 2) {
             cardMedium.setBackgroundResource(R.drawable.bg_difficulty_selected);
-            setChildTextColor(cardMedium, true);
+            setDifficultyChildStyle(cardMedium, true);
         } else {
             cardHard.setBackgroundResource(R.drawable.bg_difficulty_selected);
-            setChildTextColor(cardHard, true);
+            setDifficultyChildStyle(cardHard, true);
         }
     }
     
-    private void setChildTextColor(LinearLayout container, boolean isSelected) {
-        int color = isSelected ? Color.WHITE : Color.parseColor("#555555");
+    private void setDifficultyChildStyle(LinearLayout container, boolean isSelected) {
+        int color = isSelected ? Color.WHITE : Color.parseColor("#888888");
         for (int i = 0; i < container.getChildCount(); i++) {
             View child = container.getChildAt(i);
             if (child instanceof TextView) {
                 TextView tv = (TextView) child;
-                if (!tv.getText().toString().contains("★")) tv.setTextColor(color);
+                if (!tv.getText().toString().contains("★")) {
+                    tv.setTextColor(color);
+                    tv.setTypeface(null, isSelected ? android.graphics.Typeface.BOLD : android.graphics.Typeface.NORMAL);
+                } else {
+                    // Keep stars yellow when unselected, white when selected
+                    tv.setTextColor(isSelected ? Color.WHITE : Color.parseColor("#FBC02D"));
+                }
             }
         }
     }

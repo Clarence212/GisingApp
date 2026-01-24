@@ -4,10 +4,10 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
-import android.widget.Switch;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+import com.google.android.material.switchmaterial.SwitchMaterial;
 import java.util.List;
 
 public class AlarmAdapter extends RecyclerView.Adapter<AlarmAdapter.AlarmViewHolder> {
@@ -38,7 +38,7 @@ public class AlarmAdapter extends RecyclerView.Adapter<AlarmAdapter.AlarmViewHol
         Alarm alarm = alarmList.get(position);
         holder.tvTime.setText(alarm.getTimeString());
         holder.tvDays.setText(alarm.getDaysDisplay());
-        holder.tvChallenge.setText(alarm.getChallengeType() + " - Lvl " + alarm.getDifficultyLevel());
+        holder.tvChallenge.setText(String.format("%s - Lvl %d", alarm.getChallengeType(), alarm.getDifficultyLevel()));
         
         holder.switchAlarm.setOnCheckedChangeListener(null);
         holder.switchAlarm.setChecked(alarm.isEnabled());
@@ -72,7 +72,7 @@ public class AlarmAdapter extends RecyclerView.Adapter<AlarmAdapter.AlarmViewHol
         TextView tvTime;
         TextView tvDays;
         TextView tvChallenge;
-        Switch switchAlarm;
+        SwitchMaterial switchAlarm;
         ImageButton btnDelete;
 
         public AlarmViewHolder(@NonNull View itemView) {

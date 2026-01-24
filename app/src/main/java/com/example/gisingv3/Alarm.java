@@ -29,7 +29,11 @@ public class Alarm implements Serializable {
     public int getDifficultyLevel() { return difficultyLevel; }
     public boolean isEnabled() { return isEnabled; }
     public void setEnabled(boolean enabled) { isEnabled = enabled; }
-    public boolean[] getDaysSelected() { return daysSelected; }
+    public boolean[] getDaysSelected() { 
+        // Safety check for older saved data
+        if (daysSelected == null) return new boolean[7];
+        return daysSelected; 
+    }
     
     public String getTimeString() {
         String amPm = hour >= 12 ? "PM" : "AM";
@@ -39,13 +43,13 @@ public class Alarm implements Serializable {
     }
 
     public String getDaysDisplay() {
-        if (daysSelected == null) return "One-time alarm";
+        boolean[] days = getDaysSelected();
         
         StringBuilder sb = new StringBuilder();
         String[] shortDays = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
         int count = 0;
         for (int i = 0; i < 7; i++) {
-            if (daysSelected[i]) {
+            if (days[i]) {
                 if (sb.length() > 0) sb.append(", ");
                 sb.append(shortDays[i]);
                 count++;
@@ -54,8 +58,8 @@ public class Alarm implements Serializable {
         
         if (count == 0) return "Once";
         if (count == 7) return "Every day";
-        if (count == 5 && !daysSelected[0] && !daysSelected[6]) return "Weekdays";
-        if (count == 2 && daysSelected[0] && daysSelected[6]) return "Weekends";
+        if (count == 5 && !days[0] && !days[6]) return "Weekdays";
+        if (count == 2 && days[0] && days[6]) return "Weekends";
         
         return sb.toString();
     }

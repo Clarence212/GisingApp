@@ -1,4 +1,5 @@
 <resources>
+    <!-- Base style for day circles -->
     <style name="DayCircle">
         <item name="android:layout_width">32dp</item>
         <item name="android:layout_height">32dp</item>
@@ -15,5 +16,16 @@
     <style name="DayCircle.Unselected" parent="DayCircle">
         <item name="android:background">@drawable/bg_day_squircle_unselected</item>
         <item name="android:textColor">#555555</item>
+    </style>
+
+    <!-- Missing style used in activity_add_alarm -->
+    <style name="AlarmDayCircle">
+        <item name="android:layout_width">35dp</item>
+        <item name="android:layout_height">35dp</item>
+        <item name="android:gravity">center</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:textColor">#888888</item>
+        <item name="android:background">@drawable/bg_circle_day_unselected</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
     </style>
 </resources>
