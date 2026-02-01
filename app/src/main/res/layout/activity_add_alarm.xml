@@ -4,13 +4,13 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#FFFFFF">
+    android:background="#F8F9FE">
 
     <!-- Header -->
     <View
         android:id="@+id/headerBg"
         android:layout_width="0dp"
-        android:layout_height="80dp"
+        android:layout_height="100dp"
         android:background="#4364F7"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -18,21 +18,24 @@
 
     <ImageButton
         android:id="@+id/btnBack"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
+        android:layout_width="45dp"
+        android:layout_height="45dp"
         android:background="@drawable/bg_back_button"
         android:src="@drawable/ic_back"
-        android:layout_marginStart="16dp"
+        android:layout_marginStart="20dp"
+        android:padding="10dp"
+        android:scaleType="centerInside"
         app:layout_constraintBottom_toBottomOf="@id/headerBg"
         app:layout_constraintTop_toTopOf="@id/headerBg"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:tint="#FFFFFF" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="New Alarm"
-        android:textSize="20sp"
-        android:textStyle="bold"
+        android:textSize="22sp"
+        android:fontFamily="sans-serif-black"
         android:textColor="#FFFFFF"
         android:layout_marginStart="16dp"
         app:layout_constraintBottom_toBottomOf="@id/btnBack"
@@ -43,7 +46,6 @@
     <ScrollView
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:padding="16dp"
         android:clipToPadding="false"
         app:layout_constraintTop_toBottomOf="@id/headerBg"
         app:layout_constraintBottom_toTopOf="@id/saveAlarmButton"
@@ -53,37 +55,46 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:padding="24dp">
 
             <!-- Time Label -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Time"
-                android:textColor="#555555"
-                android:textSize="14sp"
-                android:layout_marginTop="8dp"/>
+                android:textColor="#888888"
+                android:fontFamily="sans-serif-medium"
+                android:textSize="15sp"/>
 
-            <!-- Time Input -->
-            <TextView
-                android:id="@+id/tvTimeInput"
+            <!-- Time Input Card -->
+            <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="07:00 AM"
-                android:textSize="18sp"
-                android:textColor="#000000"
-                android:background="@drawable/bg_input_field"
-                android:padding="16dp"
-                android:layout_marginTop="8dp"/>
+                app:cardCornerRadius="16dp"
+                app:cardElevation="0dp"
+                android:layout_marginTop="12dp">
+                <TextView
+                    android:id="@+id/tvTimeInput"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="07:00 AM"
+                    android:textSize="24sp"
+                    android:textColor="#333333"
+                    android:fontFamily="sans-serif-black"
+                    android:padding="20dp"
+                    android:gravity="center_vertical"/>
+            </androidx.cardview.widget.CardView>
 
             <!-- Repeat Label -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Repeat"
-                android:textColor="#555555"
-                android:textSize="14sp"
-                android:layout_marginTop="24dp"/>
+                android:textColor="#888888"
+                android:fontFamily="sans-serif-medium"
+                android:textSize="15sp"
+                android:layout_marginTop="32dp"/>
 
             <!-- Repeat Days -->
             <LinearLayout
@@ -92,15 +103,15 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:weightSum="7"
-                android:layout_marginTop="8dp">
+                android:layout_marginTop="12dp">
 
-                <TextView android:id="@+id/daySun" style="@style/DayCircle.Unselected" android:text="S" android:layout_weight="1" android:layout_width="0dp" android:gravity="center" android:background="@drawable/bg_day_squircle_unselected"/>
-                <TextView android:id="@+id/dayMon" style="@style/DayCircle.Unselected" android:text="M" android:layout_weight="1" android:layout_width="0dp" android:gravity="center" android:background="@drawable/bg_day_squircle_unselected"/>
-                <TextView android:id="@+id/dayTue" style="@style/DayCircle.Unselected" android:text="T" android:layout_weight="1" android:layout_width="0dp" android:gravity="center" android:background="@drawable/bg_day_squircle_unselected"/>
-                <TextView android:id="@+id/dayWed" style="@style/DayCircle.Unselected" android:text="W" android:layout_weight="1" android:layout_width="0dp" android:gravity="center" android:background="@drawable/bg_day_squircle_unselected"/>
-                <TextView android:id="@+id/dayThu" style="@style/DayCircle.Unselected" android:text="T" android:layout_weight="1" android:layout_width="0dp" android:gravity="center" android:background="@drawable/bg_day_squircle_unselected"/>
-                <TextView android:id="@+id/dayFri" style="@style/DayCircle.Unselected" android:text="F" android:layout_weight="1" android:layout_width="0dp" android:gravity="center" android:background="@drawable/bg_day_squircle_unselected"/>
-                <TextView android:id="@+id/daySat" style="@style/DayCircle.Unselected" android:text="S" android:layout_weight="1" android:layout_width="0dp" android:gravity="center" android:background="@drawable/bg_day_squircle_unselected"/>
+                <TextView android:id="@+id/daySun" style="@style/AlarmDayCircle" android:text="S" android:layout_weight="1" android:layout_width="0dp" />
+                <TextView android:id="@+id/dayMon" style="@style/AlarmDayCircle" android:text="M" android:layout_weight="1" android:layout_width="0dp" />
+                <TextView android:id="@+id/dayTue" style="@style/AlarmDayCircle" android:text="T" android:layout_weight="1" android:layout_width="0dp" />
+                <TextView android:id="@+id/dayWed" style="@style/AlarmDayCircle" android:text="W" android:layout_weight="1" android:layout_width="0dp" />
+                <TextView android:id="@+id/dayThu" style="@style/AlarmDayCircle" android:text="T" android:layout_weight="1" android:layout_width="0dp" />
+                <TextView android:id="@+id/dayFri" style="@style/AlarmDayCircle" android:text="F" android:layout_weight="1" android:layout_width="0dp" />
+                <TextView android:id="@+id/daySat" style="@style/AlarmDayCircle" android:text="S" android:layout_weight="1" android:layout_width="0dp" />
             </LinearLayout>
 
             <!-- Challenge Label -->
@@ -108,53 +119,66 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Challenge Type"
-                android:textColor="#555555"
-                android:textSize="14sp"
-                android:layout_marginTop="24dp"/>
+                android:textColor="#888888"
+                android:fontFamily="sans-serif-medium"
+                android:textSize="15sp"
+                android:layout_marginTop="32dp"/>
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:layout_marginTop="8dp">
+                android:layout_marginTop="12dp">
 
                 <LinearLayout
                     android:id="@+id/cardMath"
                     android:layout_width="0dp"
-                    android:layout_height="100dp"
+                    android:layout_height="120dp"
                     android:layout_weight="1"
                     android:background="@drawable/bg_option_selected"
                     android:orientation="vertical"
                     android:gravity="center"
+                    android:elevation="0dp"
                     android:layout_marginEnd="8dp">
-                    <!-- Icon Placeholder -->
-                    <View android:layout_width="24dp" android:layout_height="24dp" android:background="#FF9800"/> 
+                    <ImageView 
+                        android:id="@+id/ivMathIcon"
+                        android:layout_width="32dp" 
+                        android:layout_height="32dp" 
+                        android:src="@drawable/baseline_calculate_24" 
+                        app:tint="#FFFFFF"/>
                     <TextView
+                        android:id="@+id/tvMathLabel"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Math Problem"
                         android:textColor="#FFFFFF"
-                        android:textStyle="bold"
-                        android:layout_marginTop="8dp"/>
+                        android:fontFamily="sans-serif-black"
+                        android:layout_marginTop="12dp"/>
                 </LinearLayout>
 
                 <LinearLayout
                     android:id="@+id/cardShake"
                     android:layout_width="0dp"
-                    android:layout_height="100dp"
+                    android:layout_height="120dp"
                     android:layout_weight="1"
                     android:background="@drawable/bg_option_unselected"
                     android:orientation="vertical"
                     android:gravity="center"
                     android:layout_marginStart="8dp">
-                    <!-- Icon Placeholder -->
-                    <View android:layout_width="24dp" android:layout_height="24dp" android:background="#555555"/>
+                    <ImageView 
+                        android:id="@+id/ivShakeIcon"
+                        android:layout_width="32dp" 
+                        android:layout_height="32dp" 
+                        android:src="@drawable/phone_shake" 
+                        app:tint="#888888"/>
                     <TextView
+                        android:id="@+id/tvShakeLabel"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Shake Phone"
-                        android:textColor="#555555"
-                        android:layout_marginTop="8dp"/>
+                        android:textColor="#888888"
+                        android:fontFamily="sans-serif-medium"
+                        android:layout_marginTop="12dp"/>
                 </LinearLayout>
 
             </LinearLayout>
@@ -164,20 +188,21 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Difficulty"
-                android:textColor="#555555"
-                android:textSize="14sp"
-                android:layout_marginTop="24dp"/>
+                android:textColor="#888888"
+                android:fontFamily="sans-serif-medium"
+                android:textSize="15sp"
+                android:layout_marginTop="32dp"/>
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:layout_marginTop="8dp">
+                android:layout_marginTop="12dp">
 
                 <LinearLayout
                     android:id="@+id/cardEasy"
                     android:layout_width="0dp"
-                    android:layout_height="80dp"
+                    android:layout_height="90dp"
                     android:layout_weight="1"
                     android:background="@drawable/bg_difficulty_unselected"
                     android:orientation="vertical"
@@ -187,14 +212,15 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Easy"
-                        android:textColor="#555555"/>
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="★" android:textColor="#FBC02D"/>
+                        android:textColor="#888888"
+                        android:fontFamily="sans-serif-medium"/>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="★" android:textColor="#FBC02D" android:textSize="18sp"/>
                 </LinearLayout>
 
                 <LinearLayout
                     android:id="@+id/cardMedium"
                     android:layout_width="0dp"
-                    android:layout_height="80dp"
+                    android:layout_height="90dp"
                     android:layout_weight="1"
                     android:background="@drawable/bg_difficulty_selected"
                     android:orientation="vertical"
@@ -205,14 +231,14 @@
                         android:layout_height="wrap_content"
                         android:text="Medium"
                         android:textColor="#FFFFFF"
-                        android:textStyle="bold"/>
-                     <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="★★" android:textColor="#FFF"/>
+                        android:fontFamily="sans-serif-black"/>
+                     <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="★★" android:textColor="#FFF" android:textSize="18sp"/>
                 </LinearLayout>
 
                 <LinearLayout
                     android:id="@+id/cardHard"
                     android:layout_width="0dp"
-                    android:layout_height="80dp"
+                    android:layout_height="90dp"
                     android:layout_weight="1"
                     android:background="@drawable/bg_difficulty_unselected"
                     android:orientation="vertical"
@@ -222,32 +248,37 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Hard"
-                        android:textColor="#555555"/>
-                     <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="★★★" android:textColor="#FBC02D"/>
+                        android:textColor="#888888"
+                        android:fontFamily="sans-serif-medium"/>
+                     <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="★★★" android:textColor="#FBC02D" android:textSize="18sp"/>
                 </LinearLayout>
 
             </LinearLayout>
             
-            <!-- Spacer for bottom button -->
-            <View android:layout_width="match_parent" android:layout_height="80dp"/>
+            <View android:layout_width="match_parent" android:layout_height="100dp"/>
 
         </LinearLayout>
     </ScrollView>
 
-    <!-- Save Button -->
+    <!-- Save Button Container for shadow effect -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:background="@android:color/transparent"
+        app:layout_constraintBottom_toBottomOf="parent"/>
+
     <Button
         android:id="@+id/saveAlarmButton"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:text="Save Alarm"
+        android:layout_height="60dp"
+        android:text="SAVE ALARM"
         android:textSize="18sp"
+        android:fontFamily="sans-serif-black"
         android:textColor="#FFFFFF"
         android:backgroundTint="#4364F7"
-        app:cornerRadius="24dp"
-        android:layout_margin="16dp"
-        android:drawableStart="@drawable/ic_check"
-        android:drawableTint="#FFFFFF"
-        android:paddingVertical="12dp"
+        app:cornerRadius="30dp"
+        android:layout_margin="24dp"
+        android:elevation="8dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>

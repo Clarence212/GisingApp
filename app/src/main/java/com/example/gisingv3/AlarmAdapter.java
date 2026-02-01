@@ -4,10 +4,10 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
-import android.widget.Switch;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+import com.google.android.material.switchmaterial.SwitchMaterial;
 import java.util.List;
 
 public class AlarmAdapter extends RecyclerView.Adapter<AlarmAdapter.AlarmViewHolder> {
@@ -37,7 +37,8 @@ public class AlarmAdapter extends RecyclerView.Adapter<AlarmAdapter.AlarmViewHol
     public void onBindViewHolder(@NonNull AlarmViewHolder holder, int position) {
         Alarm alarm = alarmList.get(position);
         holder.tvTime.setText(alarm.getTimeString());
-        holder.tvChallenge.setText(alarm.getChallengeType() + " - Lvl " + alarm.getDifficultyLevel());
+        holder.tvDays.setText(alarm.getDaysDisplay());
+        holder.tvChallenge.setText(String.format("%s - Lvl %d", alarm.getChallengeType(), alarm.getDifficultyLevel()));
         
         holder.switchAlarm.setOnCheckedChangeListener(null);
         holder.switchAlarm.setChecked(alarm.isEnabled());
@@ -69,13 +70,15 @@ public class AlarmAdapter extends RecyclerView.Adapter<AlarmAdapter.AlarmViewHol
 
     public static class AlarmViewHolder extends RecyclerView.ViewHolder {
         TextView tvTime;
+        TextView tvDays;
         TextView tvChallenge;
-        Switch switchAlarm;
+        SwitchMaterial switchAlarm;
         ImageButton btnDelete;
 
         public AlarmViewHolder(@NonNull View itemView) {
             super(itemView);
             tvTime = itemView.findViewById(R.id.tvAlarmTime);
+            tvDays = itemView.findViewById(R.id.tvAlarmDays);
             tvChallenge = itemView.findViewById(R.id.tvAlarmChallenge);
             switchAlarm = itemView.findViewById(R.id.switchAlarm);
             btnDelete = itemView.findViewById(R.id.btnDeleteAlarm);
