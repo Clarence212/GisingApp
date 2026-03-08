@@ -5,14 +5,18 @@ import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
+import android.os.Build;
 import java.util.Calendar;
 import java.util.List;
 
 public class BootReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
-        if (Intent.ACTION_BOOT_COMPLETED.equals(intent.getAction()) ||
-            "android.intent.action.QUICKBOOT_POWERON".equals(intent.getAction())) {
+        String action = intent.getAction();
+        if (Intent.ACTION_BOOT_COMPLETED.equals(action) ||
+            "android.intent.action.QUICKBOOT_POWERON".equals(action) ||
+            "com.htc.intent.action.QUICKBOOT_POWERON".equals(action)) {
             
             List<Alarm> alarmList = AlarmStorage.loadAlarms(context);
             if (alarmList != null) {
@@ -27,38 +31,68 @@ public class BootReceiver extends BroadcastReceiver {
 
     private void scheduleAlarm(Context context, Alarm alarm) {
         AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+        if (alarmManager == null) return;
+
         Intent intent = new Intent(context, AlarmReceiver.class);
         intent.putExtra("challenge_type", alarm.getChallengeType());
         intent.putExtra("difficulty", alarm.getDifficultyLevel());
+        intent.putExtra("alarm_id", alarm.getId());
+        
+        // Add unique data to intent so PendingIntents don't merge
+        intent.setData(Uri.parse("alarm://" + alarm.getId()));
         
         PendingIntent pendingIntent = PendingIntent.getBroadcast(context, alarm.getId(), intent, 
-                PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
+        long triggerTime = getNextTriggerTime(alarm);
+
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                if (alarmManager.canScheduleExactAlarms()) {
+                    alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerTime, pendingIntent);
+                } else {
+                    alarmManager.setExact(AlarmManager.RTC_WAKEUP, triggerTime, pendingIntent);
+                }
+            } else {
+                alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerTime, pendingIntent);
+            }
+        } catch (SecurityException e) {
+            // Permission missing after boot
+        }
+    }
+
+    private long getNextTriggerTime(Alarm alarm) {
         Calendar calendar = Calendar.getInstance();
         calendar.set(Calendar.HOUR_OF_DAY, alarm.getHour());
         calendar.set(Calendar.MINUTE, alarm.getMinute());
         calendar.set(Calendar.SECOND, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
 
-        // If the time has already passed today, schedule it for tomorrow
-        // UNLESS you want it to trigger immediately if it was missed while the phone was off.
-        if (calendar.getTimeInMillis() <= System.currentTimeMillis()) {
+        long now = System.currentTimeMillis();
+        boolean[] days = alarm.getDaysSelected();
+        
+        boolean hasDays = false;
+        if (days != null) {
+            for (boolean d : days) if (d) hasDays = true;
+        }
+        
+        if (!hasDays) {
+            if (calendar.getTimeInMillis() <= now) {
+                calendar.add(Calendar.DAY_OF_YEAR, 1);
+            }
+            return calendar.getTimeInMillis();
+        }
+
+        for (int i = 0; i < 7; i++) {
+            int dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK); // 1 = Sun, 2 = Mon...
+            int dayIndex = dayOfWeek - 1;
+            
+            if (days[dayIndex] && calendar.getTimeInMillis() > now) {
+                return calendar.getTimeInMillis();
+            }
             calendar.add(Calendar.DAY_OF_YEAR, 1);
         }
-
-        if (alarmManager != null) {
-            try {
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
-                    if (alarmManager.canScheduleExactAlarms()) {
-                        alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
-                    } else {
-                        alarmManager.setExact(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
-                    }
-                } else {
-                    alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
-                }
-            } catch (SecurityException e) {
-                // Handle permission issue
-            }
-        }
+        
+        return calendar.getTimeInMillis();
     }
 }

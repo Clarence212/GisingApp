@@ -1,5 +1,6 @@
 package com.example.gisingv3;
 
+import android.app.AlarmManager;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -11,21 +12,28 @@ import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
 import androidx.core.app.NotificationCompat;
+import java.util.Calendar;
+import java.util.List;
 
 public class AlarmReceiver extends BroadcastReceiver {
     private static final String CHANNEL_ID = "ALARM_CHANNEL";
 
     @Override
     public void onReceive(Context context, Intent intent) {
+        int alarmId = intent.getIntExtra("alarm_id", -1);
+        String challengeType = intent.getStringExtra("challenge_type");
+        int difficulty = intent.getIntExtra("difficulty", 1);
+
         createNotificationChannel(context);
 
+        // Prepare the ring activity intent
         Intent ringIntent = new Intent(context, AlarmRingActivity.class);
         ringIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        if (intent.getExtras() != null) {
-            ringIntent.putExtras(intent.getExtras());
-        }
+        ringIntent.putExtra("alarm_id", alarmId);
+        ringIntent.putExtra("challenge_type", challengeType);
+        ringIntent.putExtra("difficulty", difficulty);
 
-        PendingIntent fullScreenPendingIntent = PendingIntent.getActivity(context, 0,
+        PendingIntent fullScreenPendingIntent = PendingIntent.getActivity(context, alarmId,
                 ringIntent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
         Uri alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
@@ -36,7 +44,7 @@ public class AlarmReceiver extends BroadcastReceiver {
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID)
                 .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
                 .setContentTitle("ALARM")
-                .setContentText("WAKE UP! Solve the math problem to stop.")
+                .setContentText("WAKE UP! Solve the challenge to stop.")
                 .setPriority(NotificationCompat.PRIORITY_MAX)
                 .setCategory(NotificationCompat.CATEGORY_ALARM)
                 .setFullScreenIntent(fullScreenPendingIntent, true)
@@ -47,15 +55,86 @@ public class AlarmReceiver extends BroadcastReceiver {
 
         NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         if (notificationManager != null) {
-            notificationManager.notify(1, builder.build());
+            // Use unique alarmId to allow multiple simultaneous alarms
+            notificationManager.notify(alarmId, builder.build());
         }
         
-        // Ensure the activity starts as well
+        // Start activity
         context.startActivity(ringIntent);
+
+        // Reschedule for next occurrence if it's a repeating alarm
+        rescheduleNextOccurrence(context, alarmId);
+    }
+
+    private void rescheduleNextOccurrence(Context context, int alarmId) {
+        List<Alarm> alarmList = AlarmStorage.loadAlarms(context);
+        if (alarmList == null) return;
+
+        for (Alarm alarm : alarmList) {
+            if (alarm.getId() == alarmId && alarm.isEnabled()) {
+                // If it's a repeating alarm, calculate and schedule the next time
+                boolean hasDays = false;
+                for (boolean d : alarm.getDaysSelected()) if (d) hasDays = true;
+
+                if (hasDays) {
+                    scheduleNext(context, alarm);
+                }
+                break;
+            }
+        }
+    }
+
+    private void scheduleNext(Context context, Alarm alarm) {
+        AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+        Intent intent = new Intent(context, AlarmReceiver.class);
+        intent.setData(Uri.parse("alarm://" + alarm.getId()));
+        intent.putExtra("alarm_id", alarm.getId());
+        intent.putExtra("challenge_type", alarm.getChallengeType());
+        intent.putExtra("difficulty", alarm.getDifficultyLevel());
+
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(context, alarm.getId(), intent,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+
+        // Logic to find next trigger time (similar to MainActivity)
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(Calendar.HOUR_OF_DAY, alarm.getHour());
+        calendar.set(Calendar.MINUTE, alarm.getMinute());
+        calendar.set(Calendar.SECOND, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
+
+        long now = System.currentTimeMillis();
+        boolean[] days = alarm.getDaysSelected();
+
+        // Start looking from "tomorrow" relative to the current alarm trigger
+        calendar.add(Calendar.DAY_OF_YEAR, 1);
+
+        for (int i = 0; i < 7; i++) {
+            int dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK);
+            int dayIndex = dayOfWeek - 1;
+
+            if (days[dayIndex]) {
+                if (alarmManager != null) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                        if (alarmManager.canScheduleExactAlarms()) {
+                            alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
+                        } else {
+                            alarmManager.setExact(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
+                        }
+                    } else {
+                        alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
+                    }
+                }
+                return;
+            }
+            calendar.add(Calendar.DAY_OF_YEAR, 1);
+        }
     }
 
     private void createNotificationChannel(Context context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationManager manager = context.getSystemService(NotificationManager.class);
+            if (manager != null && manager.getNotificationChannel(CHANNEL_ID) != null) return;
+
             NotificationChannel channel = new NotificationChannel(
                     CHANNEL_ID,
                     "Alarm Channel",
@@ -77,7 +156,6 @@ public class AlarmReceiver extends BroadcastReceiver {
             channel.enableVibration(true);
             channel.setLockscreenVisibility(android.app.Notification.VISIBILITY_PUBLIC);
             
-            NotificationManager manager = context.getSystemService(NotificationManager.class);
             if (manager != null) {
                 manager.createNotificationChannel(channel);
             }
