@@ -15,14 +15,13 @@ import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.Vibrator;
 import android.text.InputFilter;
-import android.text.Spanned;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -36,16 +35,21 @@ public class AlarmRingActivity extends AppCompatActivity implements SensorEventL
     private TextView tvRingTime;
     private TextView tvMathQuestion;
     private EditText etMathAnswer;
-    private Button btnSolveChallenge;
+    private Button btnStartOrSolveChallenge;
     private TextView tvChallengePrompt;
+    private TextView tvDifficultyStars;
+    private TextView tvChallengeTypeLabel;
+    private ImageView ivChallengeIcon;
     
     private MediaPlayer mediaPlayer;
     private Vibrator vibrator;
 
     private String challengeType = "Math Problem";
     private int difficulty = 1;
+    private int alarmId = -1;
     private int correctAnswer;
     private boolean isChallengeSolved = false;
+    private boolean isChallengeStarted = false;
 
     private SensorManager sensorManager;
     private int shakeCount = 0;
@@ -76,21 +80,18 @@ public class AlarmRingActivity extends AppCompatActivity implements SensorEventL
         tvRingTime = findViewById(R.id.tvRingTime);
         tvMathQuestion = findViewById(R.id.tvMathQuestion);
         etMathAnswer = findViewById(R.id.etMathAnswer);
-        btnSolveChallenge = findViewById(R.id.btnSolveChallenge);
+        btnStartOrSolveChallenge = findViewById(R.id.btnSolveChallenge);
         tvChallengePrompt = findViewById(R.id.tvChallengePrompt);
+        tvDifficultyStars = findViewById(R.id.tvDifficultyStars);
+        tvChallengeTypeLabel = findViewById(R.id.tvChallengeTypeLabel);
+        ivChallengeIcon = findViewById(R.id.ivChallengeIcon);
 
-        // Filter to block any characters that are not digits
         etMathAnswer.setFilters(new InputFilter[]{
-            new InputFilter() {
-                @Override
-                public CharSequence filter(CharSequence source, int start, int end, Spanned dest, int dstart, int dend) {
-                    for (int i = start; i < end; i++) {
-                        if (!Character.isDigit(source.charAt(i))) {
-                            return "";
-                        }
-                    }
-                    return null;
+            (source, start, end, dest, dstart, dend) -> {
+                for (int i = start; i < end; i++) {
+                    if (!Character.isDigit(source.charAt(i))) return "";
                 }
+                return null;
             }
         });
 
@@ -98,12 +99,61 @@ public class AlarmRingActivity extends AppCompatActivity implements SensorEventL
         tvRingTime.setText(sdf.format(new Date()));
 
         if (getIntent() != null) {
+            alarmId = getIntent().getIntExtra("alarm_id", -1);
             challengeType = getIntent().getStringExtra("challenge_type");
             difficulty = getIntent().getIntExtra("difficulty", 1);
         }
         
-        setupChallenge();
+        setupChallengeUI();
+        btnStartOrSolveChallenge.setOnClickListener(v -> startChallenge());
         startAlarmEffects();
+    }
+
+    private void setupChallengeUI() {
+        // Update Stars
+        StringBuilder stars = new StringBuilder();
+        for (int i = 0; i < difficulty; i++) {
+            stars.append("★");
+        }
+        tvDifficultyStars.setText(stars.toString());
+
+        // Update Label and Icon
+        if ("Shake Phone".equals(challengeType)) {
+            tvChallengeTypeLabel.setText("Shake Phone Challenge");
+            ivChallengeIcon.setImageResource(R.drawable.phone_shake);
+        } else {
+            tvChallengeTypeLabel.setText("Solve Math Problem");
+            ivChallengeIcon.setImageResource(R.drawable.baseline_calculate_24);
+        }
+    }
+
+    private void startChallenge() {
+        isChallengeStarted = true;
+        
+        if ("Shake Phone".equals(challengeType)) {
+            btnStartOrSolveChallenge.setVisibility(View.GONE);
+            tvMathQuestion.setText("SHAKE TO STOP!");
+            tvMathQuestion.setVisibility(View.VISIBLE);
+            tvChallengePrompt.setVisibility(View.VISIBLE);
+            requiredShakes = 10 * difficulty;
+            tvChallengePrompt.setText("Shakes remaining: " + requiredShakes);
+            
+            sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+            if (sensorManager != null) {
+                Sensor accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+                if (accelerometer != null) {
+                    sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_UI);
+                }
+            }
+        } else {
+            // Math Problem
+            btnStartOrSolveChallenge.setText("Submit Answer");
+            btnStartOrSolveChallenge.setOnClickListener(v -> checkAnswer());
+            
+            generateMathProblem();
+            tvMathQuestion.setVisibility(View.VISIBLE);
+            etMathAnswer.setVisibility(View.VISIBLE);
+        }
     }
 
     private void hideSystemUI() {
@@ -119,54 +169,7 @@ public class AlarmRingActivity extends AppCompatActivity implements SensorEventL
     @Override
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
-        if (hasFocus) {
-            hideSystemUI();
-        }
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        if (!isChallengeSolved) {
-            new Handler().postDelayed(() -> {
-                if (!isChallengeSolved) {
-                    Intent intent = new Intent(this, AlarmRingActivity.class);
-                    intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT | Intent.FLAG_ACTIVITY_NEW_TASK);
-                    startActivity(intent);
-                }
-            }, 500);
-        }
-    }
-
-    @Override
-    protected void onUserLeaveHint() {
-        super.onUserLeaveHint();
-        if (!isChallengeSolved) {
-            Intent intent = new Intent(this, AlarmRingActivity.class);
-            intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT | Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(intent);
-        }
-    }
-
-    private void setupChallenge() {
-        if ("Shake Phone".equals(challengeType)) {
-            tvMathQuestion.setText("SHAKE TO STOP!");
-            etMathAnswer.setVisibility(View.GONE);
-            btnSolveChallenge.setVisibility(View.GONE);
-            requiredShakes = 10 * difficulty;
-            tvChallengePrompt.setText("Shakes remaining: " + requiredShakes);
-            
-            sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-            if (sensorManager != null) {
-                Sensor accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-                if (accelerometer != null) {
-                    sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_UI);
-                }
-            }
-        } else {
-            generateMathProblem();
-            btnSolveChallenge.setOnClickListener(v -> checkAnswer());
-        }
+        if (hasFocus) hideSystemUI();
     }
 
     private void startAlarmEffects() {
@@ -258,10 +261,9 @@ public class AlarmRingActivity extends AppCompatActivity implements SensorEventL
     private void onChallengeSolved() {
         isChallengeSolved = true;
         
-        // Remove the ongoing notification
         NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        if (notificationManager != null) {
-            notificationManager.cancel(1); // Cancel notification with ID 1
+        if (notificationManager != null && alarmId != -1) {
+            notificationManager.cancel(alarmId);
         }
         
         stopAlarm();
@@ -283,6 +285,8 @@ public class AlarmRingActivity extends AppCompatActivity implements SensorEventL
 
     @Override
     public void onSensorChanged(SensorEvent event) {
+        if (!isChallengeStarted) return;
+        
         if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
             float gForce = (float) Math.sqrt(Math.pow(event.values[0], 2) + Math.pow(event.values[1], 2) + Math.pow(event.values[2], 2)) / SensorManager.GRAVITY_EARTH;
             if (gForce > 2.2f) {
