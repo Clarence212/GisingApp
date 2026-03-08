@@ -13,6 +13,8 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.provider.Settings;
 import android.view.View;
 import android.widget.TextView;
@@ -20,9 +22,12 @@ import android.widget.Toast;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -31,6 +36,16 @@ public class MainActivity extends AppCompatActivity {
     private AlarmAdapter adapter;
     private List<Alarm> alarmList;
     private int editingPosition = -1;
+
+    private TextView tvCurrentTime, tvCurrentDate;
+    private final Handler timeHandler = new Handler(Looper.getMainLooper());
+    private final Runnable timeRunnable = new Runnable() {
+        @Override
+        public void run() {
+            updateCurrentTimeAndDate();
+            timeHandler.postDelayed(this, 1000);
+        }
+    };
 
     private final ActivityResultLauncher<Intent> alarmActivityLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
@@ -62,6 +77,8 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        tvCurrentTime = findViewById(R.id.tvCurrentTime);
+        tvCurrentDate = findViewById(R.id.tvCurrentDate);
         rvAlarms = findViewById(R.id.rvAlarms);
         tvNoAlarms = findViewById(R.id.tvNoAlarms);
         FloatingActionButton btnAddAlarm = findViewById(R.id.btnAddAlarm);
@@ -71,7 +88,6 @@ public class MainActivity extends AppCompatActivity {
             alarmList = new ArrayList<>();
         }
 
-        // Reschedule to ensure accuracy after app update/storage load
         rescheduleActiveAlarms();
 
         adapter = new AlarmAdapter(alarmList, new AlarmAdapter.OnAlarmListener() {
@@ -109,6 +125,9 @@ public class MainActivity extends AppCompatActivity {
 
         updateEmptyState();
         checkExactAlarmPermission();
+        
+        // Start live clock
+        timeHandler.post(timeRunnable);
 
         btnAddAlarm.setOnClickListener(view -> {
             editingPosition = -1;
@@ -117,10 +136,21 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    private void updateCurrentTimeAndDate() {
+        if (tvCurrentTime == null || tvCurrentDate == null) return;
+        
+        SimpleDateFormat timeFormat = new SimpleDateFormat("hh:mm a", Locale.getDefault());
+        SimpleDateFormat dateFormat = new SimpleDateFormat("EEEE, MMMM d", Locale.getDefault());
+        
+        Date now = new Date();
+        tvCurrentTime.setText(timeFormat.format(now).toUpperCase());
+        tvCurrentDate.setText(dateFormat.format(now));
+    }
+
     private void checkExactAlarmPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-            if (!alarmManager.canScheduleExactAlarms()) {
+            if (alarmManager != null && !alarmManager.canScheduleExactAlarms()) {
                 Intent intent = new Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM);
                 startActivity(intent);
             }
@@ -151,12 +181,12 @@ public class MainActivity extends AppCompatActivity {
 
     private void scheduleAlarm(Alarm alarm) {
         AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        if (alarmManager == null) return;
+
         Intent intent = new Intent(this, AlarmReceiver.class);
         intent.putExtra("challenge_type", alarm.getChallengeType());
         intent.putExtra("difficulty", alarm.getDifficultyLevel());
         intent.putExtra("alarm_id", alarm.getId());
-        
-        // Add unique data to intent so PendingIntents don't merge
         intent.setData(Uri.parse("alarm://" + alarm.getId()));
         
         PendingIntent pendingIntent = PendingIntent.getBroadcast(this, alarm.getId(), intent, 
@@ -202,7 +232,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         for (int i = 0; i < 7; i++) {
-            int dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK); // 1 = Sun, 2 = Mon...
+            int dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK);
             int dayIndex = dayOfWeek - 1;
             
             if (days[dayIndex] && calendar.getTimeInMillis() > now) {
@@ -216,14 +246,20 @@ public class MainActivity extends AppCompatActivity {
 
     private void cancelAlarm(Alarm alarm) {
         AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        if (alarmManager == null) return;
+
         Intent intent = new Intent(this, AlarmReceiver.class);
         intent.setData(Uri.parse("alarm://" + alarm.getId()));
         
         PendingIntent pendingIntent = PendingIntent.getBroadcast(this, alarm.getId(), intent, 
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
         
-        if (alarmManager != null) {
-            alarmManager.cancel(pendingIntent);
-        }
+        alarmManager.cancel(pendingIntent);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        timeHandler.removeCallbacks(timeRunnable);
     }
 }
