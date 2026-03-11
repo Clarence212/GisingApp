@@ -29,7 +29,7 @@ Or open the project in Android Studio and Run.
 3. Choose a challenge type (Math problem or Shake phone) and a difficulty (Easy, Medium, Hard).  
 4. When the alarm rings, complete the challenge to stop it.
 
-<img src="docs/initialscreen.png" alt="GisingApp home screen" width="230"> <img src="docs/setAlarm.png" alt="GisingApp home screen" width="230"> <img src="docs/AlarmScreen.png" alt="GisingApp home screen" width="230"> <img src="docs/ShakeAlarm.png" alt="GisingApp home screen" width="230">
+<img src="docs/initialscreen.png" alt="GisingApp home screen" width="200"> <img src="docs/setAlarm.png" alt="GisingApp home screen" width="200"> <img src="docs/AlarmScreen.png" alt="GisingApp home screen" width="200"> <img src="docs/ShakeAlarm.png" alt="GisingApp home screen" width="200">
 
 ## Project structure
 Top-level layout (what you'll find in the repo root)
