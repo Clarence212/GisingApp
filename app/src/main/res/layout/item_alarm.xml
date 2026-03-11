@@ -67,8 +67,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:checked="true"
-            app:thumbTint="#00D1B2"
-            app:trackTint="#B2EBF2"
+            app:thumbTint="@color/switch_thumb_color"
+            app:trackTint="@color/switch_track_color"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"/>

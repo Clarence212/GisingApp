@@ -1,5 +1,6 @@
 package com.example.gisingv3;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AppCompatActivity;
 import android.app.KeyguardManager;
 import android.app.NotificationManager;
@@ -15,6 +16,7 @@ import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.Vibrator;
 import android.text.InputFilter;
 import android.view.View;
@@ -32,7 +34,6 @@ import java.util.Random;
 
 public class AlarmRingActivity extends AppCompatActivity implements SensorEventListener {
 
-    private TextView tvRingTime;
     private TextView tvMathQuestion;
     private EditText etMathAnswer;
     private Button btnStartOrSolveChallenge;
@@ -77,7 +78,7 @@ public class AlarmRingActivity extends AppCompatActivity implements SensorEventL
         hideSystemUI();
         setContentView(R.layout.activity_alarm_ring);
         
-        tvRingTime = findViewById(R.id.tvRingTime);
+        TextView tvRingTime = findViewById(R.id.tvRingTime);
         tvMathQuestion = findViewById(R.id.tvMathQuestion);
         etMathAnswer = findViewById(R.id.etMathAnswer);
         btnStartOrSolveChallenge = findViewById(R.id.btnSolveChallenge);
@@ -95,7 +96,7 @@ public class AlarmRingActivity extends AppCompatActivity implements SensorEventL
             }
         });
 
-        SimpleDateFormat sdf = new SimpleDateFormat("hh:mm a", Locale.getDefault());
+        SimpleDateFormat sdf = new SimpleDateFormat("h:mm a", Locale.getDefault());
         tvRingTime.setText(sdf.format(new Date()));
 
         if (getIntent() != null) {
@@ -107,17 +108,22 @@ public class AlarmRingActivity extends AppCompatActivity implements SensorEventL
         setupChallengeUI();
         btnStartOrSolveChallenge.setOnClickListener(v -> startChallenge());
         startAlarmEffects();
+
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                Toast.makeText(AlarmRingActivity.this, "Finish the challenge!", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     private void setupChallengeUI() {
-        // Update Stars
         StringBuilder stars = new StringBuilder();
         for (int i = 0; i < difficulty; i++) {
             stars.append("★");
         }
         tvDifficultyStars.setText(stars.toString());
 
-        // Update Label and Icon
         if ("Shake Phone".equals(challengeType)) {
             tvChallengeTypeLabel.setText("Shake Phone Challenge");
             ivChallengeIcon.setImageResource(R.drawable.phone_shake);
@@ -136,7 +142,8 @@ public class AlarmRingActivity extends AppCompatActivity implements SensorEventL
             tvMathQuestion.setVisibility(View.VISIBLE);
             tvChallengePrompt.setVisibility(View.VISIBLE);
             requiredShakes = 10 * difficulty;
-            tvChallengePrompt.setText("Shakes remaining: " + requiredShakes);
+            String prompt = "Shakes remaining: " + requiredShakes;
+            tvChallengePrompt.setText(prompt);
             
             sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
             if (sensorManager != null) {
@@ -146,7 +153,6 @@ public class AlarmRingActivity extends AppCompatActivity implements SensorEventL
                 }
             }
         } else {
-            // Math Problem
             btnStartOrSolveChallenge.setText("Submit Answer");
             btnStartOrSolveChallenge.setOnClickListener(v -> checkAnswer());
             
@@ -186,7 +192,7 @@ public class AlarmRingActivity extends AppCompatActivity implements SensorEventL
             mediaPlayer.setLooping(true);
             mediaPlayer.prepare();
             mediaPlayer.start();
-        } catch (Exception e) {}
+        } catch (Exception ignored) {}
 
         vibrator = (Vibrator) getSystemService(VIBRATOR_SERVICE);
         if (vibrator != null) {
@@ -202,7 +208,8 @@ public class AlarmRingActivity extends AppCompatActivity implements SensorEventL
                 a = random.nextInt(10) + 1;
                 b = random.nextInt(10) + 1;
                 correctAnswer = a + b;
-                tvMathQuestion.setText(a + " + " + b + " = ?");
+                String q1 = a + " + " + b + " = ?";
+                tvMathQuestion.setText(q1);
                 break;
             case 2:
                 a = random.nextInt(20) + 10;
@@ -210,10 +217,12 @@ public class AlarmRingActivity extends AppCompatActivity implements SensorEventL
                 c = random.nextInt(10) + 1;
                 if (random.nextBoolean()) {
                     correctAnswer = a + b - c;
-                    tvMathQuestion.setText("(" + a + " + " + b + ") - " + c + " = ?");
+                    String q2 = "(" + a + " + " + b + ") - " + c + " = ?";
+                    tvMathQuestion.setText(q2);
                 } else {
                     correctAnswer = a - b + c;
-                    tvMathQuestion.setText("(" + a + " - " + b + ") + " + c + " = ?");
+                    String q2 = "(" + a + " - " + b + ") + " + c + " = ?";
+                    tvMathQuestion.setText(q2);
                 }
                 break;
             case 3:
@@ -222,21 +231,24 @@ public class AlarmRingActivity extends AppCompatActivity implements SensorEventL
                 c = random.nextInt(40) + 1;
                 if (random.nextBoolean()) {
                     correctAnswer = (a * b) + c;
-                    tvMathQuestion.setText("(" + a + " × " + b + ") + " + c + " = ?");
+                    String q3 = "(" + a + " × " + b + ") + " + c + " = ?";
+                    tvMathQuestion.setText(q3);
                 } else {
                     while ((a * b) < c) {
                         a = random.nextInt(10) + 2;
                         b = random.nextInt(10) + 2;
                     }
                     correctAnswer = (a * b) - c;
-                    tvMathQuestion.setText("(" + a + " × " + b + ") - " + c + " = ?");
+                    String q3 = "(" + a + " × " + b + ") - " + c + " = ?";
+                    tvMathQuestion.setText(q3);
                 }
                 break;
             default:
                 a = random.nextInt(10) + 1;
                 b = random.nextInt(10) + 1;
                 correctAnswer = a + b;
-                tvMathQuestion.setText(a + " + " + b + " = ?");
+                String qd = a + " + " + b + " = ?";
+                tvMathQuestion.setText(qd);
                 break;
         }
     }
@@ -275,7 +287,7 @@ public class AlarmRingActivity extends AppCompatActivity implements SensorEventL
         if (mediaPlayer != null) {
             try {
                 if (mediaPlayer.isPlaying()) mediaPlayer.stop();
-            } catch (Exception e) {}
+            } catch (Exception ignored) {}
             mediaPlayer.release();
             mediaPlayer = null;
         }
@@ -295,7 +307,10 @@ public class AlarmRingActivity extends AppCompatActivity implements SensorEventL
                 lastShakeTime = now;
                 shakeCount++;
                 if (shakeCount >= requiredShakes) onChallengeSolved();
-                else tvChallengePrompt.setText("Shakes remaining: " + (requiredShakes - shakeCount));
+                else {
+                    String prompt = "Shakes remaining: " + (requiredShakes - shakeCount);
+                    tvChallengePrompt.setText(prompt);
+                }
             }
         }
     }
@@ -304,8 +319,27 @@ public class AlarmRingActivity extends AppCompatActivity implements SensorEventL
     public void onAccuracyChanged(Sensor sensor, int accuracy) {}
 
     @Override
-    public void onBackPressed() {
-        Toast.makeText(this, "Finish the challenge!", Toast.LENGTH_SHORT).show();
+    protected void onPause() {
+        super.onPause();
+        if (!isChallengeSolved) {
+            new Handler().postDelayed(() -> {
+                if (!isChallengeSolved) {
+                    Intent intent = new Intent(this, AlarmRingActivity.class);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT | Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(intent);
+                }
+            }, 500);
+        }
+    }
+
+    @Override
+    protected void onUserLeaveHint() {
+        super.onUserLeaveHint();
+        if (!isChallengeSolved) {
+            Intent intent = new Intent(this, AlarmRingActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT | Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intent);
+        }
     }
 
     @Override

@@ -4,16 +4,14 @@ plugins {
 
 android {
     namespace = "com.example.gisingv3"
-    compileSdk {
-        version = release(36)
-    }
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.example.gisingv3"
         minSdk = 24
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 41
+        versionName = "4.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -36,7 +34,7 @@ android {
 dependencies {
     implementation(libs.appcompat)
     implementation(libs.material)
-    implementation("com.google.code.gson:gson:2.10.1") // Added GSON for JSON serialization
+    implementation("com.google.code.gson:gson:2.10.1")
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)

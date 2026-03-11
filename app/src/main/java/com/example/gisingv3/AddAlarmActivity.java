@@ -140,7 +140,8 @@ public class AddAlarmActivity extends AppCompatActivity {
         String amPm = selectedHour >= 12 ? "PM" : "AM";
         int hour12 = selectedHour % 12;
         if (hour12 == 0) hour12 = 12;
-        tvTimeInput.setText(String.format(Locale.getDefault(), "%02d:%02d %s", hour12, selectedMinute, amPm));
+        // Use %d instead of %02d for hour to remove leading zero
+        tvTimeInput.setText(String.format(Locale.getDefault(), "%d:%02d %s", hour12, selectedMinute, amPm));
     }
     
     private void updateDaySelection(int index) {

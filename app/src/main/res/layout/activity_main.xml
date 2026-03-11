@@ -10,22 +10,24 @@
     <View
         android:id="@+id/headerBg"
         android:layout_width="0dp"
-        android:layout_height="320dp"
+        android:layout_height="0dp"
         android:background="#4364F7"
+        app:layout_constraintHeight_percent="0.38"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- Gising! Greeting (Now at the top) -->
+    <!-- Gising! Greeting -->
     <TextView
         android:id="@+id/tvGreeting"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="48dp"
+        android:layout_marginTop="24dp"
         android:fontFamily="sans-serif-medium"
         android:text="Gising!"
         android:textColor="#FFFFFF"
         android:textSize="24sp"
+        android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -42,38 +44,48 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/tvGreeting" />
 
-    <!-- Current Time & Date (Now below the greeting) -->
+    <!-- Current Time -->
     <TextView
         android:id="@+id/tvCurrentTime"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="32dp"
+        android:layout_width="0dp"
+        android:layout_height="100dp"
+        android:layout_marginHorizontal="24dp"
         android:fontFamily="sans-serif-thin"
         android:text="11:59 PM"
         android:textColor="#FFFFFF"
-        android:textSize="64sp"
-        app:layout_constraintEnd_toEndOf="parent"
+        android:gravity="center"
+        android:maxLines="1"
+        android:includeFontPadding="false"
+        app:autoSizeTextType="uniform"
+        app:autoSizeMinTextSize="32sp"
+        app:autoSizeMaxTextSize="80sp"
+        app:layout_constraintTop_toBottomOf="@id/tvGreetingSub"
+        app:layout_constraintBottom_toTopOf="@+id/tvCurrentDate"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tvGreetingSub" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintVertical_chainStyle="packed" />
 
+    <!-- Current Date -->
     <TextView
         android:id="@+id/tvCurrentDate"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
+        android:layout_marginTop="2dp"
         android:text="Sunday, March 8"
         android:textColor="#E0E0E0"
         android:textSize="16sp"
+        app:layout_constraintBottom_toBottomOf="@id/headerBg"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tvCurrentTime" />
+        app:layout_constraintTop_toBottomOf="@id/tvCurrentTime"
+        android:layout_marginBottom="16dp" />
 
     <!-- Alarm List -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvAlarms"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:padding="16dp"
+        android:padding="12dp"
         android:clipToPadding="false"
         app:layout_constraintTop_toBottomOf="@id/headerBg"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -87,11 +99,12 @@
         android:text="No alarms yet"
         android:textSize="18sp"
         android:textColor="#888888"
-        app:layout_constraintTop_toBottomOf="@id/headerBg"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toTopOf="@id/rvAlarms"
+        app:layout_constraintBottom_toBottomOf="@id/rvAlarms"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
+    <!-- Add Alarm FAB -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/btnAddAlarm"
         android:layout_width="wrap_content"

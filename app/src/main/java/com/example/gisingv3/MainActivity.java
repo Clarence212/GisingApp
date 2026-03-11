@@ -3,18 +3,23 @@ package com.example.gisingv3;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatDelegate;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.PowerManager;
 import android.provider.Settings;
 import android.view.View;
 import android.widget.TextView;
@@ -47,6 +52,13 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
+    private final ActivityResultLauncher<String> requestPermissionLauncher =
+            registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
+                if (!isGranted) {
+                    Toast.makeText(this, "Notification permission is required for alarms to show.", Toast.LENGTH_LONG).show();
+                }
+            });
+
     private final ActivityResultLauncher<Intent> alarmActivityLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
             result -> {
@@ -74,6 +86,9 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        // Force the app to stay in Light Mode and remove all dark mode related logic
+        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+        
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
@@ -124,9 +139,8 @@ public class MainActivity extends AppCompatActivity {
         rvAlarms.setAdapter(adapter);
 
         updateEmptyState();
-        checkExactAlarmPermission();
+        checkPermissions();
         
-        // Start live clock
         timeHandler.post(timeRunnable);
 
         btnAddAlarm.setOnClickListener(view -> {
@@ -136,25 +150,45 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void updateCurrentTimeAndDate() {
-        if (tvCurrentTime == null || tvCurrentDate == null) return;
-        
-        SimpleDateFormat timeFormat = new SimpleDateFormat("hh:mm a", Locale.getDefault());
-        SimpleDateFormat dateFormat = new SimpleDateFormat("EEEE, MMMM d", Locale.getDefault());
-        
-        Date now = new Date();
-        tvCurrentTime.setText(timeFormat.format(now).toUpperCase());
-        tvCurrentDate.setText(dateFormat.format(now));
-    }
+    private void checkPermissions() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (androidx.core.content.ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS);
+            }
+        }
 
-    private void checkExactAlarmPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
             if (alarmManager != null && !alarmManager.canScheduleExactAlarms()) {
                 Intent intent = new Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM);
                 startActivity(intent);
+                Toast.makeText(this, "Please allow Exact Alarms for GisingApp to work correctly", Toast.LENGTH_LONG).show();
             }
         }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+            if (pm != null && !pm.isIgnoringBatteryOptimizations(getPackageName())) {
+                @SuppressLint("BatteryLife")
+                Intent intent = new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
+                intent.setData(Uri.parse("package:" + getPackageName()));
+                try {
+                    startActivity(intent);
+                } catch (Exception e) {
+                    Intent fallback = new Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS);
+                    startActivity(fallback);
+                }
+            }
+        }
+    }
+
+    private void updateCurrentTimeAndDate() {
+        if (tvCurrentTime == null || tvCurrentDate == null) return;
+        SimpleDateFormat timeFormat = new SimpleDateFormat("h:mm a", Locale.getDefault());
+        SimpleDateFormat dateFormat = new SimpleDateFormat("EEEE, MMMM d", Locale.getDefault());
+        Date now = new Date();
+        tvCurrentTime.setText(timeFormat.format(now).toUpperCase());
+        tvCurrentDate.setText(dateFormat.format(now));
     }
 
     private void saveAlarms() {
@@ -194,16 +228,12 @@ public class MainActivity extends AppCompatActivity {
 
         long triggerTime = getNextTriggerTime(alarm);
 
+        Intent showIntent = new Intent(this, MainActivity.class);
+        PendingIntent pShowIntent = PendingIntent.getActivity(this, 0, showIntent, PendingIntent.FLAG_IMMUTABLE);
+        AlarmManager.AlarmClockInfo alarmClockInfo = new AlarmManager.AlarmClockInfo(triggerTime, pShowIntent);
+        
         try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                if (alarmManager.canScheduleExactAlarms()) {
-                    alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerTime, pendingIntent);
-                } else {
-                    alarmManager.setExact(AlarmManager.RTC_WAKEUP, triggerTime, pendingIntent);
-                }
-            } else {
-                alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerTime, pendingIntent);
-            }
+            alarmManager.setAlarmClock(alarmClockInfo, pendingIntent);
         } catch (SecurityException e) {
             Toast.makeText(this, "Permission required for exact alarms", Toast.LENGTH_LONG).show();
         }
@@ -234,13 +264,11 @@ public class MainActivity extends AppCompatActivity {
         for (int i = 0; i < 7; i++) {
             int dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK);
             int dayIndex = dayOfWeek - 1;
-            
             if (days[dayIndex] && calendar.getTimeInMillis() > now) {
                 return calendar.getTimeInMillis();
             }
             calendar.add(Calendar.DAY_OF_YEAR, 1);
         }
-        
         return calendar.getTimeInMillis();
     }
 
@@ -250,10 +278,8 @@ public class MainActivity extends AppCompatActivity {
 
         Intent intent = new Intent(this, AlarmReceiver.class);
         intent.setData(Uri.parse("alarm://" + alarm.getId()));
-        
         PendingIntent pendingIntent = PendingIntent.getBroadcast(this, alarm.getId(), intent, 
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
-        
         alarmManager.cancel(pendingIntent);
     }
 
