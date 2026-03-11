@@ -11,6 +11,7 @@ import android.media.AudioAttributes;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
+import android.os.PowerManager;
 import androidx.core.app.NotificationCompat;
 import java.util.Calendar;
 import java.util.List;
@@ -20,15 +21,19 @@ public class AlarmReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
+        // Use a WakeLock to ensure the CPU stays awake while we process the alarm
+        PowerManager powerManager = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
+        PowerManager.WakeLock wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "GisingApp:AlarmWakeLock");
+        wakeLock.acquire(10000); // Hold for 10 seconds
+
         int alarmId = intent.getIntExtra("alarm_id", -1);
         String challengeType = intent.getStringExtra("challenge_type");
         int difficulty = intent.getIntExtra("difficulty", 1);
 
         createNotificationChannel(context);
 
-        // Prepare the ring activity intent
         Intent ringIntent = new Intent(context, AlarmRingActivity.class);
-        ringIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        ringIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NO_USER_ACTION);
         ringIntent.putExtra("alarm_id", alarmId);
         ringIntent.putExtra("challenge_type", challengeType);
         ringIntent.putExtra("difficulty", difficulty);
@@ -55,14 +60,13 @@ public class AlarmReceiver extends BroadcastReceiver {
 
         NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         if (notificationManager != null) {
-            // Use unique alarmId to allow multiple simultaneous alarms
             notificationManager.notify(alarmId, builder.build());
         }
         
-        // Start activity
+        // Force the activity to the front
         context.startActivity(ringIntent);
 
-        // Reschedule for next occurrence if it's a repeating alarm
+        // Reschedule logic
         rescheduleNextOccurrence(context, alarmId);
     }
 
@@ -72,10 +76,8 @@ public class AlarmReceiver extends BroadcastReceiver {
 
         for (Alarm alarm : alarmList) {
             if (alarm.getId() == alarmId && alarm.isEnabled()) {
-                // If it's a repeating alarm, calculate and schedule the next time
                 boolean hasDays = false;
                 for (boolean d : alarm.getDaysSelected()) if (d) hasDays = true;
-
                 if (hasDays) {
                     scheduleNext(context, alarm);
                 }
@@ -95,24 +97,19 @@ public class AlarmReceiver extends BroadcastReceiver {
         PendingIntent pendingIntent = PendingIntent.getBroadcast(context, alarm.getId(), intent,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
-        // Logic to find next trigger time (similar to MainActivity)
         Calendar calendar = Calendar.getInstance();
         calendar.set(Calendar.HOUR_OF_DAY, alarm.getHour());
         calendar.set(Calendar.MINUTE, alarm.getMinute());
         calendar.set(Calendar.SECOND, 0);
         calendar.set(Calendar.MILLISECOND, 0);
 
-        long now = System.currentTimeMillis();
-        boolean[] days = alarm.getDaysSelected();
-
-        // Start looking from "tomorrow" relative to the current alarm trigger
         calendar.add(Calendar.DAY_OF_YEAR, 1);
 
         for (int i = 0; i < 7; i++) {
             int dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK);
             int dayIndex = dayOfWeek - 1;
 
-            if (days[dayIndex]) {
+            if (alarm.getDaysSelected()[dayIndex]) {
                 if (alarmManager != null) {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                         if (alarmManager.canScheduleExactAlarms()) {
@@ -148,17 +145,13 @@ public class AlarmReceiver extends BroadcastReceiver {
                     .build();
             
             Uri alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
-            if (alarmSound == null) {
-                alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE);
-            }
+            if (alarmSound == null) alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE);
             
             channel.setSound(alarmSound, audioAttributes);
             channel.enableVibration(true);
             channel.setLockscreenVisibility(android.app.Notification.VISIBILITY_PUBLIC);
             
-            if (manager != null) {
-                manager.createNotificationChannel(channel);
-            }
+            if (manager != null) manager.createNotificationChannel(channel);
         }
     }
 }

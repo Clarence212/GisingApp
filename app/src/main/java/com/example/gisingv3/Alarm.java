@@ -30,7 +30,6 @@ public class Alarm implements Serializable {
     public boolean isEnabled() { return isEnabled; }
     public void setEnabled(boolean enabled) { isEnabled = enabled; }
     public boolean[] getDaysSelected() { 
-        // Safety check for older saved data
         if (daysSelected == null) return new boolean[7];
         return daysSelected; 
     }
@@ -39,7 +38,8 @@ public class Alarm implements Serializable {
         String amPm = hour >= 12 ? "PM" : "AM";
         int hour12 = hour % 12;
         if (hour12 == 0) hour12 = 12;
-        return String.format(Locale.getDefault(), "%02d:%02d %s", hour12, minute, amPm);
+        // Use %d instead of %02d for hour to remove the leading zero
+        return String.format(Locale.getDefault(), "%d:%02d %s", hour12, minute, amPm);
     }
 
     public String getDaysDisplay() {

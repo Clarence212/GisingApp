@@ -19,6 +19,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "GISINGv.3"
+rootProject.name = "GisingApp"
 include(":app")
- 
