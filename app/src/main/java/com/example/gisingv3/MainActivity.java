@@ -182,6 +182,31 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        timeHandler.post(timeRunnable);
+        refreshAlarmList();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        timeHandler.removeCallbacks(timeRunnable);
+    }
+
+    private void refreshAlarmList() {
+        ArrayList<Alarm> updatedList = AlarmStorage.loadAlarms(this);
+        if (updatedList != null) {
+            alarmList.clear();
+            alarmList.addAll(updatedList);
+            if (adapter != null) {
+                adapter.notifyDataSetChanged();
+            }
+            updateEmptyState();
+        }
+    }
+
     private void updateCurrentTimeAndDate() {
         if (tvCurrentTime == null || tvCurrentDate == null) return;
         SimpleDateFormat timeFormat = new SimpleDateFormat("h:mm a", Locale.getDefault());
@@ -235,7 +260,8 @@ public class MainActivity extends AppCompatActivity {
         try {
             alarmManager.setAlarmClock(alarmClockInfo, pendingIntent);
         } catch (SecurityException e) {
-            Toast.makeText(this, "Permission required for exact alarms", Toast.LENGTH_LONG).show();
+            // Fallback to inexact alarm if permission is missing
+            alarmManager.set(AlarmManager.RTC_WAKEUP, triggerTime, pendingIntent);
         }
     }
 

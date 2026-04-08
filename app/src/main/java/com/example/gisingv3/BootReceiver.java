@@ -38,7 +38,6 @@ public class BootReceiver extends BroadcastReceiver {
         intent.putExtra("difficulty", alarm.getDifficultyLevel());
         intent.putExtra("alarm_id", alarm.getId());
         
-        // Add unique data to intent so PendingIntents don't merge
         intent.setData(Uri.parse("alarm://" + alarm.getId()));
         
         PendingIntent pendingIntent = PendingIntent.getBroadcast(context, alarm.getId(), intent, 
@@ -46,18 +45,15 @@ public class BootReceiver extends BroadcastReceiver {
 
         long triggerTime = getNextTriggerTime(alarm);
 
+        Intent showIntent = new Intent(context, MainActivity.class);
+        PendingIntent pShowIntent = PendingIntent.getActivity(context, 0, showIntent, PendingIntent.FLAG_IMMUTABLE);
+        AlarmManager.AlarmClockInfo alarmClockInfo = new AlarmManager.AlarmClockInfo(triggerTime, pShowIntent);
+
         try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                if (alarmManager.canScheduleExactAlarms()) {
-                    alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerTime, pendingIntent);
-                } else {
-                    alarmManager.setExact(AlarmManager.RTC_WAKEUP, triggerTime, pendingIntent);
-                }
-            } else {
-                alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerTime, pendingIntent);
-            }
+            alarmManager.setAlarmClock(alarmClockInfo, pendingIntent);
         } catch (SecurityException e) {
-            // Permission missing after boot
+            // Fallback for missing exact alarm permission
+            alarmManager.set(AlarmManager.RTC_WAKEUP, triggerTime, pendingIntent);
         }
     }
 
