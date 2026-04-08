@@ -29,6 +29,7 @@ public class AlarmReceiver extends BroadcastReceiver {
         int alarmId = intent.getIntExtra("alarm_id", -1);
         String challengeType = intent.getStringExtra("challenge_type");
         int difficulty = intent.getIntExtra("difficulty", 1);
+        String toneUri = intent.getStringExtra("tone_uri");
 
         createNotificationChannel(context);
 
@@ -37,13 +38,19 @@ public class AlarmReceiver extends BroadcastReceiver {
         ringIntent.putExtra("alarm_id", alarmId);
         ringIntent.putExtra("challenge_type", challengeType);
         ringIntent.putExtra("difficulty", difficulty);
+        ringIntent.putExtra("tone_uri", toneUri);
 
         PendingIntent fullScreenPendingIntent = PendingIntent.getActivity(context, alarmId,
                 ringIntent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
-        Uri alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
-        if (alarmSound == null) {
-            alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE);
+        Uri alarmSound;
+        if (toneUri != null) {
+            alarmSound = Uri.parse(toneUri);
+        } else {
+            alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
+            if (alarmSound == null) {
+                alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE);
+            }
         }
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID)
@@ -97,6 +104,7 @@ public class AlarmReceiver extends BroadcastReceiver {
         intent.putExtra("alarm_id", alarm.getId());
         intent.putExtra("challenge_type", alarm.getChallengeType());
         intent.putExtra("difficulty", alarm.getDifficultyLevel());
+        intent.putExtra("tone_uri", alarm.getToneUri());
 
         PendingIntent pendingIntent = PendingIntent.getBroadcast(context, alarm.getId(), intent,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);

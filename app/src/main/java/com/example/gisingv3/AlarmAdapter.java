@@ -38,13 +38,15 @@ public class AlarmAdapter extends RecyclerView.Adapter<AlarmAdapter.AlarmViewHol
         Alarm alarm = alarmList.get(position);
         holder.tvTime.setText(alarm.getTimeString());
         holder.tvDays.setText(alarm.getDaysDisplay());
-        holder.tvChallenge.setText(String.format("%s - Lvl %d", alarm.getChallengeType(), alarm.getDifficultyLevel()));
+        holder.tvChallenge.setText(String.format(java.util.Locale.getDefault(), "%s - Lvl %d", alarm.getChallengeType(), alarm.getDifficultyLevel()));
         
         holder.switchAlarm.setOnCheckedChangeListener(null);
         holder.switchAlarm.setChecked(alarm.isEnabled());
-        
+        updateVisualState(holder, alarm.isEnabled());
+
         holder.switchAlarm.setOnCheckedChangeListener((buttonView, isChecked) -> {
             alarm.setEnabled(isChecked);
+            updateVisualState(holder, isChecked);
             if (listener != null) {
                 listener.onToggle(alarm, isChecked);
             }
@@ -61,6 +63,13 @@ public class AlarmAdapter extends RecyclerView.Adapter<AlarmAdapter.AlarmViewHol
                 listener.onItemClick(alarm, holder.getAdapterPosition());
             }
         });
+    }
+
+    private void updateVisualState(AlarmViewHolder holder, boolean isEnabled) {
+        float alpha = isEnabled ? 1.0f : 0.5f;
+        holder.tvTime.setAlpha(alpha);
+        holder.tvDays.setAlpha(alpha);
+        holder.tvChallenge.setAlpha(alpha);
     }
 
     @Override

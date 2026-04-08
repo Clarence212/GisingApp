@@ -208,8 +208,14 @@ public class AlarmRingActivity extends AppCompatActivity implements SensorEventL
     }
 
     private void startAlarmEffects() {
-        Uri alarmUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
-        if (alarmUri == null) alarmUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE);
+        String toneUriString = getIntent().getStringExtra("tone_uri");
+        Uri alarmUri;
+        if (toneUriString != null) {
+            alarmUri = Uri.parse(toneUriString);
+        } else {
+            alarmUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
+            if (alarmUri == null) alarmUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE);
+        }
         
         try {
             mediaPlayer = new MediaPlayer();
