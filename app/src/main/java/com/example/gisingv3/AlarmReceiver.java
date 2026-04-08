@@ -63,6 +63,9 @@ public class AlarmReceiver extends BroadcastReceiver {
             notificationManager.notify(alarmId, builder.build());
         }
         
+        // Force the activity to the front
+        context.startActivity(ringIntent);
+
         // Reschedule logic
         rescheduleNextOccurrence(context, alarmId);
     }
@@ -75,13 +78,8 @@ public class AlarmReceiver extends BroadcastReceiver {
             if (alarm.getId() == alarmId && alarm.isEnabled()) {
                 boolean hasDays = false;
                 for (boolean d : alarm.getDaysSelected()) if (d) hasDays = true;
-                
                 if (hasDays) {
                     scheduleNext(context, alarm);
-                } else {
-                    // One-time alarm fired, disable it
-                    alarm.setEnabled(false);
-                    AlarmStorage.saveAlarms(context, alarmList);
                 }
                 break;
             }
@@ -90,8 +88,6 @@ public class AlarmReceiver extends BroadcastReceiver {
 
     private void scheduleNext(Context context, Alarm alarm) {
         AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
-        if (alarmManager == null) return;
-
         Intent intent = new Intent(context, AlarmReceiver.class);
         intent.setData(Uri.parse("alarm://" + alarm.getId()));
         intent.putExtra("alarm_id", alarm.getId());
@@ -114,15 +110,16 @@ public class AlarmReceiver extends BroadcastReceiver {
             int dayIndex = dayOfWeek - 1;
 
             if (alarm.getDaysSelected()[dayIndex]) {
-                Intent showIntent = new Intent(context, MainActivity.class);
-                PendingIntent pShowIntent = PendingIntent.getActivity(context, 0, showIntent, PendingIntent.FLAG_IMMUTABLE);
-                AlarmManager.AlarmClockInfo alarmClockInfo = new AlarmManager.AlarmClockInfo(calendar.getTimeInMillis(), pShowIntent);
-                
-                try {
-                    alarmManager.setAlarmClock(alarmClockInfo, pendingIntent);
-                } catch (SecurityException e) {
-                    // Fallback to inexact if permission is somehow lost
-                    alarmManager.set(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
+                if (alarmManager != null) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                        if (alarmManager.canScheduleExactAlarms()) {
+                            alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
+                        } else {
+                            alarmManager.setExact(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
+                        }
+                    } else {
+                        alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
+                    }
                 }
                 return;
             }
