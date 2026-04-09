@@ -129,50 +129,6 @@ public class AlarmRingActivity extends AppCompatActivity implements SensorEventL
         });
     }
 
-    @Override
-    protected void onNewIntent(Intent intent) {
-        super.onNewIntent(intent);
-        setIntent(intent);
-        if (intent != null) {
-            int newAlarmId = intent.getIntExtra("alarm_id", -1);
-            
-            // CANCEL NOTIFICATION IMMEDIATELY
-            NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-            if (nm != null && newAlarmId != -1) {
-                nm.cancel(newAlarmId);
-            }
-
-            // If it's a DIFFERENT alarm, reset everything
-            if (newAlarmId != alarmId && alarmId != -1) {
-                isChallengeStarted = false;
-                isChallengeSolved = false;
-                shakeCount = 0;
-                if (sensorManager != null) sensorManager.unregisterListener(this);
-                
-                setupChallengeUI();
-                btnStartOrSolveChallenge.setVisibility(View.VISIBLE);
-                btnStartOrSolveChallenge.setText("Start Challenge");
-                btnStartOrSolveChallenge.setOnClickListener(v -> startChallenge());
-                tvMathQuestion.setVisibility(View.GONE);
-                etMathAnswer.setVisibility(View.GONE);
-                tvChallengePrompt.setVisibility(View.GONE);
-                
-                stopAlarm();
-            }
-            
-            alarmId = newAlarmId;
-            challengeType = intent.getStringExtra("challenge_type");
-            difficulty = intent.getIntExtra("difficulty", 1);
-
-            SimpleDateFormat sdf = new SimpleDateFormat("h:mm a", Locale.getDefault());
-            TextView tvRingTime = findViewById(R.id.tvRingTime);
-            if (tvRingTime != null) tvRingTime.setText(sdf.format(new Date()));
-            
-            // Ensure sound is playing
-            startAlarmEffects();
-        }
-    }
-
     private void setupChallengeUI() {
         StringBuilder stars = new StringBuilder();
         for (int i = 0; i < difficulty; i++) {
