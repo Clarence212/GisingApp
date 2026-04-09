@@ -17,7 +17,7 @@ import java.util.Calendar;
 import java.util.List;
 
 public class AlarmReceiver extends BroadcastReceiver {
-    private static final String CHANNEL_ID = "ALARM_CHANNEL";
+    private static final String CHANNEL_ID = "ALARM_CHANNEL_V4";
 
     @Override
     public void onReceive(Context context, Intent intent) {
@@ -34,23 +34,19 @@ public class AlarmReceiver extends BroadcastReceiver {
         createNotificationChannel(context);
 
         Intent ringIntent = new Intent(context, AlarmRingActivity.class);
-        ringIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NO_USER_ACTION);
+        ringIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        ringIntent.setAction("com.example.gisingv3.RING_ALARM_" + alarmId);
         ringIntent.putExtra("alarm_id", alarmId);
         ringIntent.putExtra("challenge_type", challengeType);
         ringIntent.putExtra("difficulty", difficulty);
         ringIntent.putExtra("tone_uri", toneUri);
 
-        PendingIntent fullScreenPendingIntent = PendingIntent.getActivity(context, alarmId,
+        PendingIntent ringPendingIntent = PendingIntent.getActivity(context, alarmId,
                 ringIntent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
-        Uri alarmSound;
-        if (toneUri != null) {
+        Uri alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
+        if (toneUri != null && !toneUri.isEmpty()) {
             alarmSound = Uri.parse(toneUri);
-        } else {
-            alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
-            if (alarmSound == null) {
-                alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE);
-            }
         }
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID)
@@ -59,7 +55,8 @@ public class AlarmReceiver extends BroadcastReceiver {
                 .setContentText("WAKE UP! Solve the challenge to stop.")
                 .setPriority(NotificationCompat.PRIORITY_MAX)
                 .setCategory(NotificationCompat.CATEGORY_ALARM)
-                .setFullScreenIntent(fullScreenPendingIntent, true)
+                .setFullScreenIntent(ringPendingIntent, true)
+                .setContentIntent(ringPendingIntent)
                 .setSound(alarmSound)
                 .setOngoing(true)
                 .setAutoCancel(false)
@@ -151,14 +148,11 @@ public class AlarmReceiver extends BroadcastReceiver {
             channel.setDescription("Channel for Alarm notifications");
             
             AudioAttributes audioAttributes = new AudioAttributes.Builder()
-                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
                     .setUsage(AudioAttributes.USAGE_ALARM)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
                     .build();
             
-            Uri alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
-            if (alarmSound == null) alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE);
-            
-            channel.setSound(alarmSound, audioAttributes);
+            channel.setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM), audioAttributes);
             channel.enableVibration(true);
             channel.setLockscreenVisibility(android.app.Notification.VISIBILITY_PUBLIC);
             

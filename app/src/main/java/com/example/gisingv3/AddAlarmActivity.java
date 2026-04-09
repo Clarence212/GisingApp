@@ -24,7 +24,6 @@ public class AddAlarmActivity extends AppCompatActivity {
     private LinearLayout cardEasy, cardMedium, cardHard;
     private ImageView ivMathIcon, ivShakeIcon;
     private TextView tvMathLabel, tvShakeLabel;
-    private TextView tvToneName;
 
     private TextView[] dayViews;
     private boolean[] daysSelected = {false, false, false, false, false, false, false};
@@ -57,8 +56,6 @@ public class AddAlarmActivity extends AppCompatActivity {
         cardEasy = findViewById(R.id.cardEasy);
         cardMedium = findViewById(R.id.cardMedium);
         cardHard = findViewById(R.id.cardHard);
-        tvToneName = findViewById(R.id.tvToneName);
-        View cardTone = findViewById(R.id.cardTone);
         
         ivMathIcon = findViewById(R.id.ivMathIcon);
         ivShakeIcon = findViewById(R.id.ivShakeIcon);
@@ -96,7 +93,6 @@ public class AddAlarmActivity extends AppCompatActivity {
         updateTimeDisplay();
         updateChallengeSelection();
         updateDifficultySelection();
-        tvToneName.setText(selectedToneTitle);
         
         for (int i = 0; i < 7; i++) {
             final int dayIndex = i;
@@ -140,17 +136,6 @@ public class AddAlarmActivity extends AppCompatActivity {
         tvHour.setOnClickListener(v -> showTimePicker());
         tvMinute.setOnClickListener(v -> showTimePicker());
         btnTimePicker.setOnClickListener(v -> showTimePicker());
-        
-        cardTone.setOnClickListener(v -> {
-            Intent intent = new Intent(android.media.RingtoneManager.ACTION_RINGTONE_PICKER);
-            intent.putExtra(android.media.RingtoneManager.EXTRA_RINGTONE_TYPE, android.media.RingtoneManager.TYPE_ALARM);
-            intent.putExtra(android.media.RingtoneManager.EXTRA_RINGTONE_TITLE, "Select Alarm Tone");
-            intent.putExtra(android.media.RingtoneManager.EXTRA_RINGTONE_EXISTING_URI, 
-                    selectedToneUri != null ? android.net.Uri.parse(selectedToneUri) : null);
-            intent.putExtra(android.media.RingtoneManager.EXTRA_RINGTONE_SHOW_DEFAULT, true);
-            intent.putExtra(android.media.RingtoneManager.EXTRA_RINGTONE_SHOW_SILENT, false);
-            ringtonePickerLauncher.launch(intent);
-        });
 
         cardMath.setOnClickListener(v -> {
             selectedChallenge = "Math Problem";
@@ -186,24 +171,6 @@ public class AddAlarmActivity extends AppCompatActivity {
             finish();
         });
     }
-
-    private final androidx.activity.result.ActivityResultLauncher<Intent> ringtonePickerLauncher = registerForActivityResult(
-            new androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult(),
-            result -> {
-                if (result.getResultCode() == RESULT_OK && result.getData() != null) {
-                    android.net.Uri uri = result.getData().getParcelableExtra(android.media.RingtoneManager.EXTRA_RINGTONE_PICKED_URI);
-                    if (uri != null) {
-                        selectedToneUri = uri.toString();
-                        android.media.Ringtone ringtone = android.media.RingtoneManager.getRingtone(this, uri);
-                        selectedToneTitle = ringtone.getTitle(this);
-                    } else {
-                        selectedToneUri = null;
-                        selectedToneTitle = "Default Alarm";
-                    }
-                    tvToneName.setText(selectedToneTitle);
-                }
-            }
-    );
 
     private void showTimePicker() {
         MaterialTimePicker picker = new MaterialTimePicker.Builder()

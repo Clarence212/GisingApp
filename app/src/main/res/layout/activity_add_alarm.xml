@@ -368,57 +368,6 @@
 
             </LinearLayout>
 
-            <!-- Alarm Tone Label -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Alarm Tone"
-                android:textColor="#888888"
-                android:fontFamily="sans-serif-medium"
-                android:textSize="15sp"
-                android:layout_marginTop="32dp"/>
-
-            <!-- Alarm Tone Selection Card -->
-            <androidx.cardview.widget.CardView
-                android:id="@+id/cardTone"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="0dp"
-                android:layout_marginTop="12dp"
-                android:clickable="true"
-                android:focusable="true"
-                android:foreground="?attr/selectableItemBackground">
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:padding="20dp"
-                    android:gravity="center_vertical">
-                    <ImageView
-                        android:layout_width="24dp"
-                        android:layout_height="24dp"
-                        android:src="@android:drawable/ic_lock_idle_alarm"
-                        app:tint="#4364F7"/>
-                    <TextView
-                        android:id="@+id/tvToneName"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Default Alarm"
-                        android:textSize="18sp"
-                        android:textColor="#333333"
-                        android:fontFamily="sans-serif-medium"
-                        android:layout_marginStart="16dp"/>
-                    <ImageView
-                        android:layout_width="20dp"
-                        android:layout_height="20dp"
-                        android:src="@drawable/ic_back"
-                        android:rotation="180"
-                        app:tint="#CCCCCC"/>
-                </LinearLayout>
-            </androidx.cardview.widget.CardView>
-
             <View android:layout_width="match_parent" android:layout_height="100dp"/>
 
         </LinearLayout>

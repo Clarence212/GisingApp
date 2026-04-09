@@ -77,6 +77,18 @@ public class AlarmRingActivity extends AppCompatActivity implements SensorEventL
 
         hideSystemUI();
         setContentView(R.layout.activity_alarm_ring);
+
+        if (getIntent() != null) {
+            alarmId = getIntent().getIntExtra("alarm_id", -1);
+            challengeType = getIntent().getStringExtra("challenge_type");
+            difficulty = getIntent().getIntExtra("difficulty", 1);
+            
+            // CANCEL NOTIFICATION IMMEDIATELY TO STOP SYSTEM SOUND
+            NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+            if (nm != null && alarmId != -1) {
+                nm.cancel(alarmId);
+            }
+        }
         
         TextView tvRingTime = findViewById(R.id.tvRingTime);
         tvMathQuestion = findViewById(R.id.tvMathQuestion);
@@ -122,27 +134,42 @@ public class AlarmRingActivity extends AppCompatActivity implements SensorEventL
         super.onNewIntent(intent);
         setIntent(intent);
         if (intent != null) {
-            alarmId = intent.getIntExtra("alarm_id", -1);
+            int newAlarmId = intent.getIntExtra("alarm_id", -1);
+            
+            // CANCEL NOTIFICATION IMMEDIATELY
+            NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+            if (nm != null && newAlarmId != -1) {
+                nm.cancel(newAlarmId);
+            }
+
+            // If it's a DIFFERENT alarm, reset everything
+            if (newAlarmId != alarmId && alarmId != -1) {
+                isChallengeStarted = false;
+                isChallengeSolved = false;
+                shakeCount = 0;
+                if (sensorManager != null) sensorManager.unregisterListener(this);
+                
+                setupChallengeUI();
+                btnStartOrSolveChallenge.setVisibility(View.VISIBLE);
+                btnStartOrSolveChallenge.setText("Start Challenge");
+                btnStartOrSolveChallenge.setOnClickListener(v -> startChallenge());
+                tvMathQuestion.setVisibility(View.GONE);
+                etMathAnswer.setVisibility(View.GONE);
+                tvChallengePrompt.setVisibility(View.GONE);
+                
+                stopAlarm();
+            }
+            
+            alarmId = newAlarmId;
             challengeType = intent.getStringExtra("challenge_type");
             difficulty = intent.getIntExtra("difficulty", 1);
-            
-            // If a new alarm comes in while one is ringing, reset UI
-            isChallengeStarted = false;
-            isChallengeSolved = false;
-            shakeCount = 0;
-            if (sensorManager != null) sensorManager.unregisterListener(this);
-            
-            setupChallengeUI();
-            btnStartOrSolveChallenge.setVisibility(View.VISIBLE);
-            btnStartOrSolveChallenge.setText("Start Challenge");
-            btnStartOrSolveChallenge.setOnClickListener(v -> startChallenge());
-            tvMathQuestion.setVisibility(View.GONE);
-            etMathAnswer.setVisibility(View.GONE);
-            tvChallengePrompt.setVisibility(View.GONE);
-            
+
             SimpleDateFormat sdf = new SimpleDateFormat("h:mm a", Locale.getDefault());
             TextView tvRingTime = findViewById(R.id.tvRingTime);
             if (tvRingTime != null) tvRingTime.setText(sdf.format(new Date()));
+            
+            // Ensure sound is playing
+            startAlarmEffects();
         }
     }
 
@@ -208,9 +235,11 @@ public class AlarmRingActivity extends AppCompatActivity implements SensorEventL
     }
 
     private void startAlarmEffects() {
+        if (mediaPlayer != null && mediaPlayer.isPlaying()) return;
+
         String toneUriString = getIntent().getStringExtra("tone_uri");
         Uri alarmUri;
-        if (toneUriString != null) {
+        if (toneUriString != null && !toneUriString.isEmpty()) {
             alarmUri = Uri.parse(toneUriString);
         } else {
             alarmUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
@@ -218,6 +247,9 @@ public class AlarmRingActivity extends AppCompatActivity implements SensorEventL
         }
         
         try {
+            if (mediaPlayer != null) {
+                mediaPlayer.release();
+            }
             mediaPlayer = new MediaPlayer();
             mediaPlayer.setDataSource(this, alarmUri);
             mediaPlayer.setAudioAttributes(new AudioAttributes.Builder()
@@ -227,7 +259,14 @@ public class AlarmRingActivity extends AppCompatActivity implements SensorEventL
             mediaPlayer.setLooping(true);
             mediaPlayer.prepare();
             mediaPlayer.start();
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            // Fallback to default if custom fails
+            try {
+                mediaPlayer = MediaPlayer.create(this, RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM));
+                mediaPlayer.setLooping(true);
+                mediaPlayer.start();
+            } catch (Exception ignored) {}
+        }
 
         vibrator = (Vibrator) getSystemService(VIBRATOR_SERVICE);
         if (vibrator != null) {
@@ -356,25 +395,11 @@ public class AlarmRingActivity extends AppCompatActivity implements SensorEventL
     @Override
     protected void onPause() {
         super.onPause();
-        if (!isChallengeSolved) {
-            new Handler().postDelayed(() -> {
-                if (!isChallengeSolved) {
-                    Intent intent = new Intent(this, AlarmRingActivity.class);
-                    intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT | Intent.FLAG_ACTIVITY_NEW_TASK);
-                    startActivity(intent);
-                }
-            }, 500);
-        }
     }
 
     @Override
     protected void onUserLeaveHint() {
         super.onUserLeaveHint();
-        if (!isChallengeSolved) {
-            Intent intent = new Intent(this, AlarmRingActivity.class);
-            intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT | Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(intent);
-        }
     }
 
     @Override
