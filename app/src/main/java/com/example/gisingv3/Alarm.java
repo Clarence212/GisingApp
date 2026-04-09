@@ -11,8 +11,10 @@ public class Alarm implements Serializable {
     private int difficultyLevel;
     private boolean isEnabled;
     private boolean[] daysSelected; // [Sun, Mon, Tue, Wed, Thu, Fri, Sat]
+    private String toneUri;
+    private String toneTitle;
 
-    public Alarm(int id, int hour, int minute, String challengeType, int difficultyLevel, boolean isEnabled, boolean[] daysSelected) {
+    public Alarm(int id, int hour, int minute, String challengeType, int difficultyLevel, boolean isEnabled, boolean[] daysSelected, String toneUri, String toneTitle) {
         this.id = id;
         this.hour = hour;
         this.minute = minute;
@@ -20,6 +22,8 @@ public class Alarm implements Serializable {
         this.difficultyLevel = difficultyLevel;
         this.isEnabled = isEnabled;
         this.daysSelected = daysSelected;
+        this.toneUri = toneUri;
+        this.toneTitle = toneTitle;
     }
 
     public int getId() { return id; }
@@ -29,6 +33,12 @@ public class Alarm implements Serializable {
     public int getDifficultyLevel() { return difficultyLevel; }
     public boolean isEnabled() { return isEnabled; }
     public void setEnabled(boolean enabled) { isEnabled = enabled; }
+    public String getToneUri() { return toneUri; }
+    public String getToneTitle() { return toneTitle; }
+    public void setTone(String uri, String title) { 
+        this.toneUri = uri;
+        this.toneTitle = title;
+    }
     public boolean[] getDaysSelected() { 
         if (daysSelected == null) return new boolean[7];
         return daysSelected; 

@@ -74,16 +74,129 @@
                 app:cardCornerRadius="16dp"
                 app:cardElevation="0dp"
                 android:layout_marginTop="12dp">
-                <TextView
-                    android:id="@+id/tvTimeInput"
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="07:00 AM"
-                    android:textSize="24sp"
-                    android:textColor="#333333"
-                    android:fontFamily="sans-serif-black"
-                    android:padding="20dp"
-                    android:gravity="center_vertical"/>
+                    android:orientation="horizontal"
+                    android:padding="16dp"
+                    android:gravity="center">
+
+                    <!-- Hour Adjust -->
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:gravity="center">
+                        <ImageButton
+                            android:id="@+id/btnHourUp"
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
+                            android:src="@drawable/ic_back"
+                            android:rotation="90"
+                            android:background="?attr/selectableItemBackgroundBorderless"
+                            app:tint="#4364F7"/>
+                        <TextView
+                            android:id="@+id/tvHour"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="07"
+                            android:textSize="32sp"
+                            android:textColor="#333333"
+                            android:fontFamily="sans-serif-black"/>
+                        <ImageButton
+                            android:id="@+id/btnHourDown"
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
+                            android:src="@drawable/ic_back"
+                            android:rotation="270"
+                            android:background="?attr/selectableItemBackgroundBorderless"
+                            app:tint="#4364F7"/>
+                    </LinearLayout>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text=":"
+                        android:textSize="32sp"
+                        android:textColor="#333333"
+                        android:layout_marginHorizontal="8dp"
+                        android:fontFamily="sans-serif-black"/>
+
+                    <!-- Minute Adjust -->
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:gravity="center">
+                        <ImageButton
+                            android:id="@+id/btnMinUp"
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
+                            android:src="@drawable/ic_back"
+                            android:rotation="90"
+                            android:background="?attr/selectableItemBackgroundBorderless"
+                            app:tint="#4364F7"/>
+                        <TextView
+                            android:id="@+id/tvMinute"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="00"
+                            android:textSize="32sp"
+                            android:textColor="#333333"
+                            android:fontFamily="sans-serif-black"/>
+                        <ImageButton
+                            android:id="@+id/btnMinDown"
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
+                            android:src="@drawable/ic_back"
+                            android:rotation="270"
+                            android:background="?attr/selectableItemBackgroundBorderless"
+                            app:tint="#4364F7"/>
+                    </LinearLayout>
+
+                    <!-- AM/PM Selector -->
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:layout_marginStart="16dp"
+                        android:gravity="center">
+                        <TextView
+                            android:id="@+id/tvAm"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="AM"
+                            android:textSize="18sp"
+                            android:textColor="#4364F7"
+                            android:fontFamily="sans-serif-black"
+                            android:padding="4dp"
+                            android:clickable="true"
+                            android:focusable="true"/>
+                        <TextView
+                            android:id="@+id/tvPm"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="PM"
+                            android:textSize="18sp"
+                            android:textColor="#CCCCCC"
+                            android:fontFamily="sans-serif-black"
+                            android:padding="4dp"
+                            android:clickable="true"
+                            android:focusable="true"/>
+                    </LinearLayout>
+
+                    <View android:layout_width="0dp" android:layout_height="0dp" android:layout_weight="1"/>
+
+                    <ImageButton
+                        android:id="@+id/btnTimePicker"
+                        android:layout_width="45dp"
+                        android:layout_height="45dp"
+                        android:src="@drawable/ic_back"
+                        android:rotation="180"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        app:tint="#CCCCCC"/>
+
+                </LinearLayout>
             </androidx.cardview.widget.CardView>
 
             <!-- Repeat Label -->
@@ -102,16 +215,16 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:weightSum="7"
+                android:gravity="center_horizontal"
                 android:layout_marginTop="12dp">
 
-                <TextView android:id="@+id/daySun" style="@style/AlarmDayCircle" android:text="S" android:layout_weight="1" android:layout_width="0dp" />
-                <TextView android:id="@+id/dayMon" style="@style/AlarmDayCircle" android:text="M" android:layout_weight="1" android:layout_width="0dp" />
-                <TextView android:id="@+id/dayTue" style="@style/AlarmDayCircle" android:text="T" android:layout_weight="1" android:layout_width="0dp" />
-                <TextView android:id="@+id/dayWed" style="@style/AlarmDayCircle" android:text="W" android:layout_weight="1" android:layout_width="0dp" />
-                <TextView android:id="@+id/dayThu" style="@style/AlarmDayCircle" android:text="T" android:layout_weight="1" android:layout_width="0dp" />
-                <TextView android:id="@+id/dayFri" style="@style/AlarmDayCircle" android:text="F" android:layout_weight="1" android:layout_width="0dp" />
-                <TextView android:id="@+id/daySat" style="@style/AlarmDayCircle" android:text="S" android:layout_weight="1" android:layout_width="0dp" />
+                <TextView android:id="@+id/daySun" style="@style/AlarmDayCircle" android:text="S" android:layout_width="40dp" android:layout_height="40dp" android:layout_marginHorizontal="4dp"/>
+                <TextView android:id="@+id/dayMon" style="@style/AlarmDayCircle" android:text="M" android:layout_width="40dp" android:layout_height="40dp" android:layout_marginHorizontal="4dp"/>
+                <TextView android:id="@+id/dayTue" style="@style/AlarmDayCircle" android:text="T" android:layout_width="40dp" android:layout_height="40dp" android:layout_marginHorizontal="4dp"/>
+                <TextView android:id="@+id/dayWed" style="@style/AlarmDayCircle" android:text="W" android:layout_width="40dp" android:layout_height="40dp" android:layout_marginHorizontal="4dp"/>
+                <TextView android:id="@+id/dayThu" style="@style/AlarmDayCircle" android:text="T" android:layout_width="40dp" android:layout_height="40dp" android:layout_marginHorizontal="4dp"/>
+                <TextView android:id="@+id/dayFri" style="@style/AlarmDayCircle" android:text="F" android:layout_width="40dp" android:layout_height="40dp" android:layout_marginHorizontal="4dp"/>
+                <TextView android:id="@+id/daySat" style="@style/AlarmDayCircle" android:text="S" android:layout_width="40dp" android:layout_height="40dp" android:layout_marginHorizontal="4dp"/>
             </LinearLayout>
 
             <!-- Challenge Label -->
@@ -254,7 +367,7 @@
                 </LinearLayout>
 
             </LinearLayout>
-            
+
             <View android:layout_width="match_parent" android:layout_height="100dp"/>
 
         </LinearLayout>

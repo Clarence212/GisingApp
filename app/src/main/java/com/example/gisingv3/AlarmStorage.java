@@ -21,9 +21,9 @@ public class AlarmStorage {
         String json = gson.toJson(alarms);
         
         try (FileOutputStream fos = context.openFileOutput(FILE_NAME, Context.MODE_PRIVATE)) {
-            fos.write(json.getBytes());
+            fos.write(json.getBytes(java.nio.charset.StandardCharsets.UTF_8));
         } catch (Exception e) {
-            e.printStackTrace(); // In a real app, handle this more gracefully
+            e.printStackTrace();
         }
     }
 

@@ -1,7 +1,8 @@
 package com.example.gisingv3;
 
 import androidx.appcompat.app.AppCompatActivity;
-import android.app.TimePickerDialog;
+import com.google.android.material.timepicker.MaterialTimePicker;
+import com.google.android.material.timepicker.TimeFormat;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -17,7 +18,8 @@ import java.util.Locale;
 
 public class AddAlarmActivity extends AppCompatActivity {
 
-    private TextView tvTimeInput;
+    private TextView tvHour, tvMinute, tvAm, tvPm;
+    private ImageButton btnHourUp, btnHourDown, btnMinUp, btnMinDown, btnTimePicker;
     private LinearLayout cardMath, cardShake;
     private LinearLayout cardEasy, cardMedium, cardHard;
     private ImageView ivMathIcon, ivShakeIcon;
@@ -31,13 +33,24 @@ public class AddAlarmActivity extends AppCompatActivity {
     private String selectedChallenge = "Math Problem";
     private int selectedDifficulty = 2;
     private int existingId = -1;
+    private String selectedToneUri = null;
+    private String selectedToneTitle = "Default Alarm";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_alarm);
 
-        tvTimeInput = findViewById(R.id.tvTimeInput);
+        tvHour = findViewById(R.id.tvHour);
+        tvMinute = findViewById(R.id.tvMinute);
+        tvAm = findViewById(R.id.tvAm);
+        tvPm = findViewById(R.id.tvPm);
+        btnHourUp = findViewById(R.id.btnHourUp);
+        btnHourDown = findViewById(R.id.btnHourDown);
+        btnMinUp = findViewById(R.id.btnMinUp);
+        btnMinDown = findViewById(R.id.btnMinDown);
+        btnTimePicker = findViewById(R.id.btnTimePicker);
+
         cardMath = findViewById(R.id.cardMath);
         cardShake = findViewById(R.id.cardShake);
         cardEasy = findViewById(R.id.cardEasy);
@@ -72,6 +85,8 @@ public class AddAlarmActivity extends AppCompatActivity {
                 if (editAlarm.getDaysSelected() != null) {
                     daysSelected = editAlarm.getDaysSelected().clone();
                 }
+                selectedToneUri = editAlarm.getToneUri();
+                selectedToneTitle = editAlarm.getToneTitle() != null ? editAlarm.getToneTitle() : "Default Alarm";
             }
         }
 
@@ -89,8 +104,39 @@ public class AddAlarmActivity extends AppCompatActivity {
         }
 
         btnBack.setOnClickListener(v -> finish());
-        tvTimeInput.setOnClickListener(v -> showTimePicker());
         
+        btnHourUp.setOnClickListener(v -> {
+            selectedHour = (selectedHour + 1) % 24;
+            updateTimeDisplay();
+        });
+        btnHourDown.setOnClickListener(v -> {
+            selectedHour = (selectedHour - 1 + 24) % 24;
+            updateTimeDisplay();
+        });
+        btnMinUp.setOnClickListener(v -> {
+            selectedMinute = (selectedMinute + 1) % 60;
+            updateTimeDisplay();
+        });
+        btnMinDown.setOnClickListener(v -> {
+            selectedMinute = (selectedMinute - 1 + 60) % 60;
+            updateTimeDisplay();
+        });
+        tvAm.setOnClickListener(v -> {
+            if (selectedHour >= 12) {
+                selectedHour -= 12;
+                updateTimeDisplay();
+            }
+        });
+        tvPm.setOnClickListener(v -> {
+            if (selectedHour < 12) {
+                selectedHour += 12;
+                updateTimeDisplay();
+            }
+        });
+        tvHour.setOnClickListener(v -> showTimePicker());
+        tvMinute.setOnClickListener(v -> showTimePicker());
+        btnTimePicker.setOnClickListener(v -> showTimePicker());
+
         cardMath.setOnClickListener(v -> {
             selectedChallenge = "Math Problem";
             updateChallengeSelection();
@@ -118,7 +164,7 @@ public class AddAlarmActivity extends AppCompatActivity {
 
         saveButton.setOnClickListener(view -> {
             int id = (existingId != -1) ? existingId : (int) (System.currentTimeMillis() % Integer.MAX_VALUE);
-            Alarm alarm = new Alarm(id, selectedHour, selectedMinute, selectedChallenge, selectedDifficulty, true, daysSelected.clone());
+            Alarm alarm = new Alarm(id, selectedHour, selectedMinute, selectedChallenge, selectedDifficulty, true, daysSelected.clone(), selectedToneUri, selectedToneTitle);
             Intent resultIntent = new Intent();
             resultIntent.putExtra("new_alarm", alarm);
             setResult(RESULT_OK, resultIntent);
@@ -127,21 +173,42 @@ public class AddAlarmActivity extends AppCompatActivity {
     }
 
     private void showTimePicker() {
-        TimePickerDialog timePickerDialog = new TimePickerDialog(this,
-                (view, hourOfDay, minute) -> {
-                    selectedHour = hourOfDay;
-                    selectedMinute = minute;
-                    updateTimeDisplay();
-                }, selectedHour, selectedMinute, false);
-        timePickerDialog.show();
+        MaterialTimePicker picker = new MaterialTimePicker.Builder()
+                .setTimeFormat(TimeFormat.CLOCK_12H)
+                .setHour(selectedHour)
+                .setMinute(selectedMinute)
+                .setTitleText("Type Alarm Time")
+                .setInputMode(MaterialTimePicker.INPUT_MODE_KEYBOARD)
+                .build();
+
+        picker.addOnPositiveButtonClickListener(v -> {
+            selectedHour = picker.getHour();
+            selectedMinute = picker.getMinute();
+            updateTimeDisplay();
+        });
+
+        picker.show(getSupportFragmentManager(), "MATERIAL_TIME_PICKER");
+        
+        // Note: MaterialTimePicker in INPUT_MODE_KEYBOARD automatically uses 
+        // numeric input fields for hours and minutes. This ensures the 
+        // number pad is shown instead of the full keyboard.
     }
 
     private void updateTimeDisplay() {
-        String amPm = selectedHour >= 12 ? "PM" : "AM";
         int hour12 = selectedHour % 12;
         if (hour12 == 0) hour12 = 12;
-        // Use %d instead of %02d for hour to remove leading zero
-        tvTimeInput.setText(String.format(Locale.getDefault(), "%d:%02d %s", hour12, selectedMinute, amPm));
+        boolean isPm = selectedHour >= 12;
+
+        tvHour.setText(String.format(Locale.getDefault(), "%02d", hour12));
+        tvMinute.setText(String.format(Locale.getDefault(), "%02d", selectedMinute));
+        
+        if (isPm) {
+            tvPm.setTextColor(Color.parseColor("#4364F7"));
+            tvAm.setTextColor(Color.parseColor("#CCCCCC"));
+        } else {
+            tvAm.setTextColor(Color.parseColor("#4364F7"));
+            tvPm.setTextColor(Color.parseColor("#CCCCCC"));
+        }
     }
     
     private void updateDaySelection(int index) {

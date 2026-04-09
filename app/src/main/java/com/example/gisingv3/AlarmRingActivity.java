@@ -77,6 +77,18 @@ public class AlarmRingActivity extends AppCompatActivity implements SensorEventL
 
         hideSystemUI();
         setContentView(R.layout.activity_alarm_ring);
+
+        if (getIntent() != null) {
+            alarmId = getIntent().getIntExtra("alarm_id", -1);
+            challengeType = getIntent().getStringExtra("challenge_type");
+            difficulty = getIntent().getIntExtra("difficulty", 1);
+            
+            // CANCEL NOTIFICATION IMMEDIATELY TO STOP SYSTEM SOUND
+            NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+            if (nm != null && alarmId != -1) {
+                nm.cancel(alarmId);
+            }
+        }
         
         TextView tvRingTime = findViewById(R.id.tvRingTime);
         tvMathQuestion = findViewById(R.id.tvMathQuestion);
@@ -179,10 +191,21 @@ public class AlarmRingActivity extends AppCompatActivity implements SensorEventL
     }
 
     private void startAlarmEffects() {
-        Uri alarmUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
-        if (alarmUri == null) alarmUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE);
+        if (mediaPlayer != null && mediaPlayer.isPlaying()) return;
+
+        String toneUriString = getIntent().getStringExtra("tone_uri");
+        Uri alarmUri;
+        if (toneUriString != null && !toneUriString.isEmpty()) {
+            alarmUri = Uri.parse(toneUriString);
+        } else {
+            alarmUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
+            if (alarmUri == null) alarmUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE);
+        }
         
         try {
+            if (mediaPlayer != null) {
+                mediaPlayer.release();
+            }
             mediaPlayer = new MediaPlayer();
             mediaPlayer.setDataSource(this, alarmUri);
             mediaPlayer.setAudioAttributes(new AudioAttributes.Builder()
@@ -192,7 +215,14 @@ public class AlarmRingActivity extends AppCompatActivity implements SensorEventL
             mediaPlayer.setLooping(true);
             mediaPlayer.prepare();
             mediaPlayer.start();
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            // Fallback to default if custom fails
+            try {
+                mediaPlayer = MediaPlayer.create(this, RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM));
+                mediaPlayer.setLooping(true);
+                mediaPlayer.start();
+            } catch (Exception ignored) {}
+        }
 
         vibrator = (Vibrator) getSystemService(VIBRATOR_SERVICE);
         if (vibrator != null) {
@@ -321,25 +351,11 @@ public class AlarmRingActivity extends AppCompatActivity implements SensorEventL
     @Override
     protected void onPause() {
         super.onPause();
-        if (!isChallengeSolved) {
-            new Handler().postDelayed(() -> {
-                if (!isChallengeSolved) {
-                    Intent intent = new Intent(this, AlarmRingActivity.class);
-                    intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT | Intent.FLAG_ACTIVITY_NEW_TASK);
-                    startActivity(intent);
-                }
-            }, 500);
-        }
     }
 
     @Override
     protected void onUserLeaveHint() {
         super.onUserLeaveHint();
-        if (!isChallengeSolved) {
-            Intent intent = new Intent(this, AlarmRingActivity.class);
-            intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT | Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(intent);
-        }
     }
 
     @Override
