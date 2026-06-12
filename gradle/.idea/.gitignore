@@ -1,3 +1,15 @@
-# Default ignored files
-/shelf/
-/workspace.xml
+.idea/
+*.iml
+.gradle/
+build/
+*/build/
+local.properties
+.kotlin/
+.externalNativeBuild/
+.cxx/
+captures/
+*.log
+.DS_Store
+Thumbs.db
+*.jks
+*.keystore
